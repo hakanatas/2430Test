@@ -91,11 +91,23 @@ public class Teleop extends OpMode {
         // If x is pressed, reset IMU
         if (currentGamepad1.square) {
             pinpoint.resetPosAndIMU();
-        }
-        // If y is pressed, recalibrate IMU
-        if (currentGamepad1.triangle) {
             pinpoint.recalibrateIMU();
         }
+
+        if (currentGamepad1.triangle) {
+            slides.manualControl = true;
+            slides.pidfActive = false;
+            slides.positivePower = true;
+        } else if (currentGamepad1.cross) {
+            slides.manualControl = true;
+            slides.positivePower = false;
+        } else {
+            slides.setSlideTarget(slides.liftPos);
+            slides.manualControl = false;
+            slides.pidfActive = true;
+        }
+        // If y is pressed, recalibrate IMU
+
         // Circle button logic
         boolean circleJustPressed = currentGamepad1.circle && !previousGamepad1.circle;
         boolean circleReleased = !currentGamepad1.circle && previousGamepad1.circle;
@@ -246,8 +258,20 @@ public class Teleop extends OpMode {
                 specIntakeTimer.reset();
                 phase = 0;
                 break;
-
             case 2:
+
+                if (currentGamepad1.triangle) {
+                    slides.manualControl = true;
+                    slides.pidfActive = false;
+                    slides.positivePower = true;
+                } else if (currentGamepad1.cross) {
+                    slides.manualControl = true;
+                    slides.positivePower = false;
+                } else {
+                    slides.setSlideTarget(slides.liftPos);
+                    slides.manualControl = false;
+                    slides.pidfActive = true;
+                }
                 // multi-phase logic
                 switch (phase) {
                     case 0: // subPickup

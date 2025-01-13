@@ -21,7 +21,7 @@ import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Timer;
 
-@Autonomous(name = "fiveSpec", group = "auto")
+@Autonomous(name = "fiveSpec", group = "auto", preselectTeleOp = "Teleop")
 public class fiveSpec extends OpMode {
     private ElapsedTime timer = new ElapsedTime();
     private Follower follower;
@@ -30,7 +30,7 @@ public class fiveSpec extends OpMode {
     private Deposit deposit;
     private int pathState;
 
-    private PathChain preload, pushSample1Path, pushSample2Path, pushSample3Path, combinedPush, score1, return1, score2, return2, score3, return3, score4, return4, shift;
+    private PathChain preload, pushSample1Path, pushSample2Path, pushSample3Path, combinedPush, score1, return1, score2, return2, score3, return3, score4, return4, shift, inter;
    private Pose startingPose =  new Pose   (7, 65, Math.toRadians(0));
 
 
@@ -52,75 +52,50 @@ public class fiveSpec extends OpMode {
                         new Point(new Pose(40.000, 65.859, Math.toRadians(0))),
                         new Point(new Pose(34.000, 67.000, Math.toRadians(0))),
                         new Point(new Pose(0.000, 48.000, Math.toRadians(0))),
-                        new Point(new Pose(55, 30.000, Math.toRadians(0)))))
+                        new Point(new Pose(50, 30.000, Math.toRadians(0)))))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .addPath(new BezierCurve(
-                        new Point(new Pose(55, 30.000, Math.toRadians(0))),
+                        new Point(new Pose(50, 30.000, Math.toRadians(0))),
                         new Point(new Pose(65.000, 20.000, Math.toRadians(0))),
-                        new Point(new Pose(22, 24.000, Math.toRadians(0)))))
+                        new Point(new Pose(22, 20.000, Math.toRadians(0)))))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .addPath(new BezierCurve(
-                        new Point(new Pose(22, 24.000, Math.toRadians(0))),
+                        new Point(new Pose(22, 20.000, Math.toRadians(0))),
                         new Point(new Pose(65.000, 28, Math.toRadians(0))),
-                        new Point(new Pose(55, 13.5, Math.toRadians(0)))))
+                        new Point(new Pose(50, 13.5, Math.toRadians(0)))))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .addPath(new BezierLine(
-                        new Point(new Pose(55, 13.5, Math.toRadians(0))),
+                        new Point(new Pose(50, 13.5, Math.toRadians(0))),
                         new Point(new Pose(22, 13.5, Math.toRadians(0)))))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .addPath(new BezierCurve(
-                        new Point(new Pose(22, 12.500, Math.toRadians(0))),
+                        new Point(new Pose(22, 13.5, Math.toRadians(0))),
                         new Point(new Pose(65.000, 16.250, Math.toRadians(0))),
-                        new Point(new Pose(50, 8.75, Math.toRadians(0)))))
+                        new Point(new Pose(50, 7.5, Math.toRadians(0)))))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-                .addPath(new BezierLine(
-                        new Point(new Pose(50, 8.75, Math.toRadians(0))),
-                        new Point(new Pose(8.75, 8.75, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .addPath(
+                        // Line 1
+                        new BezierLine(
+                                new Point(50.000, 7.5, Point.CARTESIAN),
+                                new Point(21, 7.5, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
-        // Push Sample 1 Path (Lines 2 and 3)
-        pushSample1Path = follower.pathBuilder()
-                .addPath(new BezierCurve(
-                        new Point(new Pose(40.000, 65.859, Math.toRadians(0))),
-                        new Point(new Pose(34.000, 67.000, Math.toRadians(0))),
-                        new Point(new Pose(0.000, 48.000, Math.toRadians(0))),
-                        new Point(new Pose(55, 30.000, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-                .addPath(new BezierCurve(
-                        new Point(new Pose(55, 30.000, Math.toRadians(0))),
-                        new Point(new Pose(65.000, 20.000, Math.toRadians(0))),
-                        new Point(new Pose(13.250, 24.000, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-                .build();
-
-        // Push Sample 2 Path (Lines 4 and 5)
-        pushSample2Path = follower.pathBuilder()
-                .addPath(new BezierCurve(
-                        new Point(new Pose(13.250, 24.000, Math.toRadians(0))),
-                        new Point(new Pose(65.000, 28, Math.toRadians(0))),
-                        new Point(new Pose(55, 13.5, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-                .addPath(new BezierLine(
-                        new Point(new Pose(55, 13.5, Math.toRadians(0))),
-                        new Point(new Pose(13.250, 13.5, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-                .build();
-
-        // Push Sample 3 Path (Lines 6 and 7)
-        pushSample3Path = follower.pathBuilder()
-                .addPath(new BezierCurve(
-                        new Point(new Pose(13.250, 12.500, Math.toRadians(0))),
-                        new Point(new Pose(65.000, 16.250, Math.toRadians(0))),
-                        new Point(new Pose(50, 8.75, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-                .addPath(new BezierLine(
-                        new Point(new Pose(50, 8.75, Math.toRadians(0))),
-                        new Point(new Pose(7.5, 8.75, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+        inter = follower.pathBuilder()
+                .addPath(
+                        // Line 2
+                        new BezierCurve(
+                                new Point(21, 7.5, Point.CARTESIAN),
+                                new Point(15.000, 18.000, Point.CARTESIAN),
+                                new Point(7.500, 13, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         score1 = follower.pathBuilder()
                 .addPath(new BezierCurve(
-                        new Point(new Pose(7.5, 8.75, Math.toRadians(0))),
+                        new Point(new Pose(7.5, 13, Math.toRadians(0))),
                         new Point(new Pose(36, 24, Math.toRadians(0))),
                         new Point(new Pose(12, 48, Math.toRadians(0))),
                         new Point(new Pose(40, 68, Math.toRadians(0)))))
@@ -183,20 +158,14 @@ public class fiveSpec extends OpMode {
                     deposit.setSlideTarget(0);
                     deposit.setPivotTarget(90);
                     endEffector.setWallIntakePositionAlt();
-                    follower.followPath(combinedPush,true);
-                    setPathState(4);
+                    follower.followPath(combinedPush,false);
+                    setPathState();
             }
                 break;
             case 2:
                 if(!follower.isBusy()) {
-                    follower.followPath(pushSample2Path, false);
-                    setPathState(pathState + 1);
-                }
-                break;
-            case 3:
-                if(!follower.isBusy()) {
-                    follower.followPath(pushSample3Path, true);
-                    setPathState(pathState + 1);
+                    follower.followPath(inter, false);
+                    setPathState(4);
                 }
                 break;
             case 4:
@@ -278,21 +247,21 @@ public class fiveSpec extends OpMode {
         if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5) {
             follower.followPath(score2, true); // Follow score2 path
         }
-        if (pathTimer.getElapsedTimeSeconds() > 2.2 && pathTimer.getElapsedTimeSeconds() < 2.3) {
+        if (pathTimer.getElapsedTimeSeconds() > 2 && pathTimer.getElapsedTimeSeconds() < 2.5) {
             endEffector.closeClaw();
             deposit.setSlideTarget(75);
         }
 
-        if (pathTimer.getElapsedTimeSeconds() > 2.3 && pathTimer.getElapsedTimeSeconds() < 3) {
+        if (pathTimer.getElapsedTimeSeconds() > 2.5 && pathTimer.getElapsedTimeSeconds() < 3) {
             endEffector.setSpecScore();
             deposit.setSlideTarget(100);
         }
 
-        if (pathTimer.getElapsedTimeSeconds() > 3.2 && pathTimer.getElapsedTimeSeconds() < 4.5) {
+        if (pathTimer.getElapsedTimeSeconds() > 3.2 && pathTimer.getElapsedTimeSeconds() < 4.4) {
             deposit.setSlideTarget(475);
         }
 
-        if (pathTimer.getElapsedTimeSeconds() > 4.75) {
+        if (pathTimer.getElapsedTimeSeconds() > 4.6) {
             deposit.setSlideTarget(230);
             if (deposit.liftPos < 250) {
                 endEffector.openClaw();
@@ -332,8 +301,8 @@ public class fiveSpec extends OpMode {
 
         telemetry.update();
 
-        if (follower.getPose().getX()<=24  && follower.getPose().getY() <= 36) {
-            follower.setMaxPower(0.6);
+        if (follower.getPose().getX()<=12  && follower.getPose().getY() <= 36) {
+            follower.setMaxPower(0.75);
         } else {
             follower.setMaxPower(1);
         }
@@ -369,6 +338,10 @@ public class fiveSpec extends OpMode {
 
         // Build our newly incorporated multi-step path:
         buildPaths();
+
+        if (!deposit.slideLimit.isPressed()) {
+            throw new IllegalArgumentException("Zero slides before init");
+        }
     }
 
     @Override
@@ -376,4 +349,47 @@ public class fiveSpec extends OpMode {
         pathTimer.resetTimer();
         setPathState(0);
     }
+
+
+
+//    // Push Sample 1 Path (Lines 2 and 3)
+//    pushSample1Path = follower.pathBuilder()
+//            .addPath(new BezierCurve(
+//            new Point(new Pose(40.000, 65.859, Math.toRadians(0))),
+//            new Point(new Pose(34.000, 67.000, Math.toRadians(0))),
+//            new Point(new Pose(0.000, 48.000, Math.toRadians(0))),
+//            new Point(new Pose(50, 30.000, Math.toRadians(0)))))
+//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+//            .addPath(new BezierCurve(
+//            new Point(new Pose(50, 30.000, Math.toRadians(0))),
+//            new Point(new Pose(65.000, 20.000, Math.toRadians(0))),
+//            new Point(new Pose(13.250, 24.000, Math.toRadians(0)))))
+//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+//            .build();
+//
+//    // Push Sample 2 Path (Lines 4 and 5)
+//    pushSample2Path = follower.pathBuilder()
+//            .addPath(new BezierCurve(
+//            new Point(new Pose(13.250, 24.000, Math.toRadians(0))),
+//            new Point(new Pose(65.000, 28, Math.toRadians(0))),
+//            new Point(new Pose(50, 13.5, Math.toRadians(0)))))
+//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+//            .addPath(new BezierLine(
+//            new Point(new Pose(50, 13.5, Math.toRadians(0))),
+//            new Point(new Pose(13.250, 13.5, Math.toRadians(0)))))
+//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+//            .build();
+//
+//    // Push Sample 3 Path (Lines 6 and 7)
+//    pushSample3Path = follower.pathBuilder()
+//            .addPath(new BezierCurve(
+//            new Point(new Pose(13.250, 12.500, Math.toRadians(0))),
+//            new Point(new Pose(65.000, 16.250, Math.toRadians(0))),
+//            new Point(new Pose(50, 8.75, Math.toRadians(0)))))
+//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+//            .addPath(new BezierLine(
+//            new Point(new Pose(50, 8.75, Math.toRadians(0))),
+//            new Point(new Pose(7.5, 8.75, Math.toRadians(0)))))
+//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+//            .build();
 }
