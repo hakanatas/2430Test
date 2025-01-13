@@ -40,8 +40,8 @@ public class Deposit {
     public double pivotPos;
     public double liftPos;
     public boolean pidfActive = true;
-    public boolean positivePower = true;
     public boolean manualControl = false;
+    public float manualDiff = 0;
 
     public Deposit(HardwareMap hardwareMap, Telemetry telemetry, Boolean auto) {
         if (auto) {
@@ -122,12 +122,12 @@ public class Deposit {
                 leftLift.setPower(liftPower);
             }
         } else if (manualControl) {
-            if (positivePower && liftPos < 450) {
-                rightLift.setPower(0.4);
-                leftLift.setPower(0.4);
+            if (liftPos < 450) {
+                rightLift.setPower(Math.max(manualDiff, 0.4));
+                leftLift.setPower(Math.max(manualDiff, 0.4));
             } else {
-                rightLift.setPower(-0.4);
-                leftLift.setPower(-0.4);
+                rightLift.setPower(Math.max(Math.min(0, manualDiff), -0.5));
+                leftLift.setPower(Math.max(Math.min(0, manualDiff), -0.5));
             }
         }else {
             if (slideLimit.isPressed()) {
