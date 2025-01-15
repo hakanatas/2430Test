@@ -40,8 +40,6 @@ public class Deposit {
     public double pivotPos;
     public double liftPos;
     public boolean pidfActive = true;
-    public boolean manualControl = false;
-    public float manualDiff = 0;
 
     public Deposit(HardwareMap hardwareMap, Telemetry telemetry, Boolean auto) {
         if (auto) {
@@ -79,7 +77,7 @@ public class Deposit {
         slidePIDF.setTolerance(12);
         pivotPIDF.setTolerance(2);
         setSlideTarget(Math.round((float) rightLift.getCurrentPosition() / 42) * -1);
-        setPivotTarget((int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 24) % 360);
+        setPivotTarget((int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 24) % 340);
     }
 
     public void setSlideTarget(double target) {
@@ -121,15 +119,7 @@ public class Deposit {
                 rightLift.setPower(liftPower);
                 leftLift.setPower(liftPower);
             }
-        } else if (manualControl) {
-            if (liftPos < 450) {
-                rightLift.setPower(Math.max(manualDiff, 0.4));
-                leftLift.setPower(Math.max(manualDiff, 0.4));
-            } else {
-                rightLift.setPower(Math.max(Math.min(0, manualDiff), -0.5));
-                leftLift.setPower(Math.max(Math.min(0, manualDiff), -0.5));
-            }
-        }else {
+        } else {
             if (slideLimit.isPressed()) {
                 rightLift.setPower(0);
                 leftLift.setPower(0);
@@ -143,9 +133,6 @@ public class Deposit {
         }
 
 
-        if (pivotTarget == 0 && pivotPos < 30) {
-            pivotPower = 0;
-        }
 
         pivot.setPower(pivotPower);
     }
@@ -155,6 +142,6 @@ public class Deposit {
     }
 
     public int pivotPos() {
-        return (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 24) % 360;
+        return (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 24) % 340;
     }
 }

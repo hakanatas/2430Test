@@ -91,12 +91,11 @@ public class Teleop extends OpMode {
         // If x is pressed, reset IMU
         if (currentGamepad1.square) {
             pinpoint.resetPosAndIMU();
+        }
+        // If y is pressed, recalibrate IMU
+        if (currentGamepad1.triangle) {
             pinpoint.recalibrateIMU();
         }
-
-
-        // If y is pressed, recalibrate IMU
-
         // Circle button logic
         boolean circleJustPressed = currentGamepad1.circle && !previousGamepad1.circle;
         boolean circleReleased = !currentGamepad1.circle && previousGamepad1.circle;
@@ -105,7 +104,6 @@ public class Teleop extends OpMode {
             intakeState = -1;
             depositState = -1;
             slides.pidfActive = false;
-            slides.manualControl = false;
             slides.setPivotTarget(90);
             slides.setSlideTarget(0);
         }
@@ -124,29 +122,59 @@ public class Teleop extends OpMode {
         boolean rightTriggerJustPressed =
                 (currentGamepad1.right_trigger > 0.5f) && (previousGamepad1.right_trigger <= 0.5f);
 
-        boolean leftStickJustPressed =
-                (currentGamepad1.left_stick_button && !previousGamepad1.left_stick_button);
-        boolean rightStickJustPressed =
-                (currentGamepad1.right_stick_button && !previousGamepad1.right_stick_button);
+
+
+//        if (circleJustPressed) {
+//            // Stop PIDF control
+//            slides.stopPIDF();
+//            // Set pivot target and idle position
+//            slides.setPivotTarget(90);
+//            endEffector.setIdlePosition();
+//            // Move the lift downward at -0.5 power
+//            slides.setLiftPower(-0.5);
+//            isLiftResetting = false; // Reset flag
+//        }
+//
+//        if (currentGamepad1.circle) {
+//            // Continue holding lift power while the circle is pressed
+//            slides.setLiftPower(-0.5);
+//        }
+//
+//        if (circleReleased) {
+//            // Stop lift motor and reset encoder
+//            slides.setLiftPower(0);
+//            slides.resetLiftEncoder();
+//
+//            // Start the timer for the delay
+//            liftResetTimer.reset();
+//            isLiftResetting = true;
+//        }
+//
+//        // Check if the delay has elapsed
+//        if (isLiftResetting && liftResetTimer.milliseconds() >= 150) {
+//            slides.startPIDF();
+//            isLiftResetting = false; // Reset the flag
+//        }
+
 
 
         //------------------------------------------
         // 4) Spec Intake (left bumper +/ left trigger -)
         //------------------------------------------
-        if (leftStickJustPressed) {
+        if (leftBumperJustPressed) {
             intakeState = (intakeState + 1) % 4; // cycle 0..3
         }
-        if (leftBumperJustPressed) {
+        if (leftTriggerJustPressed) {
             intakeState = (intakeState - 1) % 4; // cycle 0..3
         }
 
         //------------------------------------------
         // 5) Spec Deposit (right bumper +/ right trigger -)
         //------------------------------------------
-        if (rightStickJustPressed) {
+        if (rightBumperJustPressed) {
             depositState = (depositState + 1) % 5; // cycle 0..4
         }
-        if (rightBumperJustPressed) {
+        if (rightTriggerJustPressed) {
             depositState = (depositState - 1) % 5; // cycle 0..4
         }
 
@@ -169,28 +197,28 @@ public class Teleop extends OpMode {
                 (currentGamepad1.dpad_down && !previousGamepad1.dpad_down);
 
         // --- Claw Open/Close ---
-        if (dpadDownJustPressed) {
+        if (dpadLeftJustPressed) {
             endEffector.openClaw();
         }
-        if (dpadUpJustPressed) {
+        if (dpadRightJustPressed) {
             endEffector.closeClaw();
         }
 
         // --- Pivot or Wrist Control ---
         if (slides.pivotTarget > 45) {
             // Control pivot
-            if (currentGamepad1.dpad_right) {
+            if (currentGamepad1.dpad_up) {
                 endEffector.incrementPivotPosition(0.02);
             }
-            if (currentGamepad1.dpad_left) {
+            if (currentGamepad1.dpad_down) {
                 endEffector.decrementPivotPosition(0.02);
             }
         } else {
             // Control wrist
-            if (currentGamepad1.dpad_right) {
+            if (currentGamepad1.dpad_up) {
                 endEffector.incrementWristPosition(0.02);
             }
-            if (currentGamepad1.dpad_left) {
+            if (currentGamepad1.dpad_down) {
                 endEffector.decrementWristPosition(0.02);
             }
         }
@@ -201,7 +229,7 @@ public class Teleop extends OpMode {
         switch (intakeState) {
             case 0:
                 // pivot=0, slide=50, idle pos, open claw
-                slides.setPivotTarget(0);
+                slides.setPivotTarget(10);
                 slides.setSlideTarget(50);
                 endEffector.setIdlePosition();
                 endEffector.openClaw();
@@ -211,24 +239,15 @@ public class Teleop extends OpMode {
 
             case 1:
                 // move lift to 400
-                slides.setSlideTarget(400);
+                slides.setSlideTarget(450);
                 if (slides.liftPos > 380) {
                     endEffector.setPreSubPickupPosition();
                 }
                 specIntakeTimer.reset();
                 phase = 0;
                 break;
-            case 2:
 
-                if (currentGamepad1.left_trigger > 0 && currentGamepad1.right_trigger > 0) {
-                    slides.manualDiff = currentGamepad1.right_trigger - currentGamepad1.left_trigger;
-                    slides.manualControl = true;
-                    slides.pidfActive = false;
-                } else {
-                    slides.setSlideTarget(slides.liftPos);
-                    slides.manualControl = false;
-                    slides.pidfActive = true;
-                }
+            case 2:
                 // multi-phase logic
                 switch (phase) {
                     case 0: // subPickup
@@ -245,7 +264,7 @@ public class Teleop extends OpMode {
                         break;
                     case 1: // deposit
                         endEffector.setObsDepositPosition();
-                        slides.setPivotTarget(12);
+                        slides.setPivotTarget(10);
                         slides.setSlideTarget(50);
                         break;
                 }
@@ -317,6 +336,8 @@ public class Teleop extends OpMode {
         telemetry.addData("At set point", slides.slidesReached);
         telemetry.addData("Lift Pos", slides.liftPos);
         telemetry.addData("Lift Target", slides.slidePIDF.getSetPoint());
+        telemetry.addData("Pivot Pos", slides.pivotPos);
+        telemetry.addData("Pivot Target", slides.pivotTarget);
         telemetry.addData("Error", slides.slidePIDF.getPositionError());
         telemetry.update();
     }
