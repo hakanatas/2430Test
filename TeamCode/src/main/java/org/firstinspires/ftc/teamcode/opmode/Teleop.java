@@ -35,6 +35,7 @@ public class Teleop extends OpMode {
     private int depositState = -1;
     private int phase = 0; // used in your multi-phase intake logic
     private ElapsedTime specIntakeTimer = new ElapsedTime();
+    private ElapsedTime specDepoTimer = new ElapsedTime();
 
     private ElapsedTime liftResetTimer = new ElapsedTime();
     private boolean isLiftResetting = false;
@@ -61,6 +62,7 @@ public class Teleop extends OpMode {
 
         // Reset your timers, etc.
         specIntakeTimer.reset();
+        specDepoTimer.reset();
 
         telemetry.addLine("Ready!");
         telemetry.update();
@@ -175,7 +177,7 @@ public class Teleop extends OpMode {
             depositState = (depositState + 1) % 5; // cycle 0..4
         }
         if (rightTriggerJustPressed) {
-            depositState = (depositState - 1) % 5; // cycle 0..4
+            depositState = 0; // cycle 0..4
         }
 
         // If both states are active, reset them (example logic — adjust to your liking)
@@ -241,8 +243,14 @@ public class Teleop extends OpMode {
                 // move lift to 400
                 slides.setSlideTarget(450);
                 if (slides.liftPos > 380) {
+                    // OPENING CLAW COULD BE DANGEROUS HERE
+                    endEffector.openClaw();
                     endEffector.setPreSubPickupPosition();
+                } else if (slides.slideTarget > 300) {
+                    endEffector.setIdlePosition();
+                    endEffector.openClaw();
                 }
+
                 specIntakeTimer.reset();
                 phase = 0;
                 break;
@@ -263,7 +271,7 @@ public class Teleop extends OpMode {
                         }
                         break;
                     case 1: // deposit
-                        endEffector.setObsDepositPosition();
+                        endEffector.setSafeIdle();
                         slides.setPivotTarget(10);
                         slides.setSlideTarget(50);
                         break;
@@ -291,17 +299,24 @@ public class Teleop extends OpMode {
                 slides.setSlideTarget(0);
                 endEffector.setWallIntakePositionAlt();
                 endEffector.openClaw();
+                specDepoTimer.reset();
                 break;
 
             case 1:
                 endEffector.closeClaw();
+                if (specDepoTimer.milliseconds() > 300) {
+                    depositState = 2;
+                    specDepoTimer.reset();
+                }
                 break;
             case 2:
                 endEffector.setSpecScore();
+                specDepoTimer.reset();
                 break;
 
             case 3:
                 slides.setSlideTarget(475);
+                specDepoTimer.reset();
                 break;
 
             case 4:
@@ -310,9 +325,10 @@ public class Teleop extends OpMode {
                     endEffector.openClaw();
                     depositState = 4;
                 }
+                specDepoTimer.reset();
                 break;
             default:
-                // do nothing
+                specDepoTimer.reset();
                 break;
         }
 

@@ -77,7 +77,7 @@ public class Deposit {
         slidePIDF.setTolerance(12);
         pivotPIDF.setTolerance(2);
         setSlideTarget(Math.round((float) rightLift.getCurrentPosition() / 42) * -1);
-        setPivotTarget((int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 24) % 340);
+        setPivotTarget(pivotPos());
     }
 
     public void setSlideTarget(double target) {
@@ -142,6 +142,6 @@ public class Deposit {
     }
 
     public int pivotPos() {
-        return (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 24) % 340;
+        return (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 20) % 360;
     }
 }

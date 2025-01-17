@@ -75,6 +75,7 @@ public class EndEffector {
     public void setIdlePosition() {
         setPositions(0.53, 0.35, 0.45, clawPosition);
     }
+    public void setSafeIdle() {setPositions(0.55, 0.2, 0.45, clawPosition);}
 
     public void setBucketScorePosition() {
         setPositions(0.55, 0.2+0.29-0.22, pivotPosition, clawPosition);
@@ -99,7 +100,7 @@ public class EndEffector {
     public void setWallIntakePositionAlt() {setPositions(0.9, 0.38, 1, 0.75);}
 
     public void setSpecScore() {
-        setPositions(0.45, 0.1, 0.45, 0.95);
+        setPositions(0.45, 0.15, 0.45, 0.95);
     }
 
     public void openClaw() {

@@ -33,7 +33,8 @@ public class fiveSpec extends OpMode {
     private PathChain preload, pushSample1Path, pushSample2Path, pushSample3Path, combinedPush, score1, return1, score2, return2, score3, return3, score4, return4, shift, inter;
    private Pose startingPose =  new Pose   (7, 65, Math.toRadians(0));
 
-   private double wall_intake = 7;
+   private double wall_intake = 7.5;
+   private double subX = 39.5;
 
 
     /**
@@ -90,25 +91,25 @@ public class fiveSpec extends OpMode {
                         new BezierCurve(
                                 new Point(19, 7.5, Point.CARTESIAN),
                                 new Point(17.3, 13, Point.CARTESIAN),
-                                new Point(8, 13, Point.CARTESIAN)
+                                new Point(wall_intake, 28, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         score1 = follower.pathBuilder()
                 .addPath(new BezierCurve(
-                        new Point(new Pose(8, 13, Math.toRadians(0))),
-                        new Point(new Pose(36, 24, Math.toRadians(0))),
-                        new Point(new Pose(12, 48, Math.toRadians(0))),
-                        new Point(new Pose(40, 70, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                        new Point(new Pose(wall_intake, 28, Math.toRadians(0))),
+                        new Point(new Pose(subX, 13, Math.toRadians(0))),
+                        new Point(new Pose(wall_intake, 70, Math.toRadians(0))),
+                        new Point(new Pose(subX, 70, Math.toRadians(0)))))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         return1 = follower.pathBuilder()
                 .addPath(
                     new BezierCurve(
-                        new Point(40.000, 70, Point.CARTESIAN),
-                        new Point(4.500, 72.000, Point.CARTESIAN),
-                        new Point(42.000, 24.000, Point.CARTESIAN),
+                        new Point(subX, 70, Point.CARTESIAN),
+                        new Point(wall_intake, 70, Point.CARTESIAN),
+                        new Point(subX, 28, Point.CARTESIAN),
                         new Point(wall_intake, 28.000, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -116,31 +117,20 @@ public class fiveSpec extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Point(wall_intake, 28.000, Point.CARTESIAN),
-                                new Point(42.000, 24.000, Point.CARTESIAN),
-                                new Point(4.500, 72.000, Point.CARTESIAN),
-                                new Point(38.000, 68.000, Point.CARTESIAN)))
+                                new Point(subX, 28, Point.CARTESIAN),
+                                new Point(wall_intake, 68, Point.CARTESIAN),
+                                new Point(subX, 68.000, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
-                .addPath(new BezierLine(new Point(38, 64, Point.CARTESIAN), new Point(40, 68.5, Point.CARTESIAN)))
+                .addPath(new BezierLine(new Point(subX, 68, Point.CARTESIAN), new Point(subX, 72, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         return2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Point(38.000, 64.000, Point.CARTESIAN),
-                                new Point(4.500, 72.000, Point.CARTESIAN),
-                                new Point(42.000, 24.000, Point.CARTESIAN),
+                                new Point(subX, 72, Point.CARTESIAN),
+                                new Point(wall_intake, 72, Point.CARTESIAN),
+                                new Point(subX, 28, Point.CARTESIAN),
                                 new Point(wall_intake, 28.000, Point.CARTESIAN)))
-                .setConstantHeadingInterpolation(Math.toRadians(0))
-                .build();
-        score3 = follower.pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Point(wall_intake, 28.000, Point.CARTESIAN),
-                                new Point(42.000, 24.000, Point.CARTESIAN),
-                                new Point(4.500, 72.000, Point.CARTESIAN),
-                                new Point(38.000, 71.000, Point.CARTESIAN)))
-                .setConstantHeadingInterpolation(Math.toRadians(0))
-                .addPath(new BezierLine(new Point(38, 64, Point.CARTESIAN), new Point(40, 68.5, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
     }
@@ -177,7 +167,8 @@ public class fiveSpec extends OpMode {
                 break;
             case 2:
                 if(!follower.isBusy()) {
-                    follower.followPath(inter, false);
+                    follower.setMaxPower(0.7);
+                    follower.followPath(inter, true);
                     setPathState(4);
                 }
                 break;
@@ -190,6 +181,8 @@ public class fiveSpec extends OpMode {
                 break;
             case 5:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    follower.setMaxPower(1);
+
                     follower.followPath(score1, true); // Follow score1 path
                 }
 
@@ -201,7 +194,7 @@ public class fiveSpec extends OpMode {
                 
 
                 if (pathTimer.getElapsedTimeSeconds() > 1.2 && pathTimer.getElapsedTimeSeconds() < 2.5) {
-                    deposit.setSlideTarget(440); // Lift slide to scoring position
+                    deposit.setSlideTarget(460); // Lift slide to scoring position
                 }
 
                 if (pathTimer.getElapsedTimeSeconds() > 3) {
@@ -218,6 +211,7 @@ public class fiveSpec extends OpMode {
                     deposit.setSlideTarget(0); // Reset slide to initial position
                     deposit.setPivotTarget(90); // Reset pivot
                     endEffector.setWallIntakePositionAlt(); // Prepare claw for intake
+                    follower.setMaxPower(0.7);
                     follower.followPath(return1, true); // Follow return1 path
                     setPathState(pathState + 1); // Transition to the next scoring path
                 }
@@ -231,14 +225,22 @@ public class fiveSpec extends OpMode {
             case 9:
                 cycle();
                 break;
-
             case 10:
                 intake();
                 break;
             case 11:
                 cycle2();
+                if (pathTimer.getElapsedTimeSeconds() > 4.4) {
+                    deposit.setSlideTarget(230);
+                    if (deposit.liftPos < 250) {
+                        endEffector.openClaw();
+                        setPathState(pathState + 1); // Transition to next return
+                    }
+                }
                 break;
-
+            case 12:
+                setPathState(-1);
+                break;
             default:
                 if (!follower.isBusy()) {
                     requestOpModeStop(); // Stop the OpMode if all states are complete
@@ -260,6 +262,7 @@ public class fiveSpec extends OpMode {
     private void cycle() {
 
         if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.8) {
+            follower.setMaxPower(1);
             follower.followPath(score2, true); // Follow score2 path
         }
         if (pathTimer.getElapsedTimeSeconds() > 2 && pathTimer.getElapsedTimeSeconds() < 2.5) {
@@ -273,7 +276,7 @@ public class fiveSpec extends OpMode {
         }
 
         if (pathTimer.getElapsedTimeSeconds() > 3.2 && pathTimer.getElapsedTimeSeconds() < 4.4) {
-            deposit.setSlideTarget(440);
+            deposit.setSlideTarget(460);
         }
 
         if (pathTimer.getElapsedTimeSeconds() > 4.6) {
@@ -286,8 +289,8 @@ public class fiveSpec extends OpMode {
     }
 
     private void cycle2() {
-
         if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.8) {
+            follower.setMaxPower(1);
             follower.followPath(score2, true); // Follow score2 path
         }
         if (pathTimer.getElapsedTimeSeconds() > 2 && pathTimer.getElapsedTimeSeconds() < 2.5) {
@@ -300,8 +303,8 @@ public class fiveSpec extends OpMode {
             deposit.setSlideTarget(100);
         }
 
-        if (pathTimer.getElapsedTimeSeconds() > 3.2 && pathTimer.getElapsedTimeSeconds() < 4.4) {
-            deposit.setSlideTarget(440);
+        if (pathTimer.getElapsedTimeSeconds() > 3.2 && pathTimer.getElapsedTimeSeconds() < 4.3) {
+            deposit.setSlideTarget(460);
         }
 
         if (pathTimer.getElapsedTimeSeconds() > 4.6) {
@@ -314,12 +317,13 @@ public class fiveSpec extends OpMode {
     }
 
     private void intake() {
-        if (!follower.isBusy()) {
+        if (!follower.isBusy() || follower.getVelocityMagnitude() < 0.05) {
+            follower.setMaxPower(0.7);
             deposit.setSlideTarget(0);
             deposit.setPivotTarget(90);
             endEffector.closeClaw();
             endEffector.setWallIntakePositionAlt();
-            follower.followPath(return2, true); // Follow return2 path
+            follower.followPath(return2, false); // Follow return2 path
             setPathState(pathState + 1); // Transition to next scoring path
         }
     }
@@ -340,6 +344,7 @@ public class fiveSpec extends OpMode {
         telemetry.addData("Heading", follower.getPose().getHeading());
         telemetry.addData("Path State", pathState);
         telemetry.addData("Path Timer", pathTimer.getElapsedTimeSeconds());
+        telemetry.addData("Path Busy", follower.isBusy());
 
 
         telemetry.update();
@@ -394,46 +399,4 @@ public class fiveSpec extends OpMode {
         setPathState(0);
     }
 
-
-
-//    // Push Sample 1 Path (Lines 2 and 3)
-//    pushSample1Path = follower.pathBuilder()
-//            .addPath(new BezierCurve(
-//            new Point(new Pose(40.000, 65.859, Math.toRadians(0))),
-//            new Point(new Pose(34.000, 67.000, Math.toRadians(0))),
-//            new Point(new Pose(0.000, 48.000, Math.toRadians(0))),
-//            new Point(new Pose(50, 30.000, Math.toRadians(0)))))
-//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-//            .addPath(new BezierCurve(
-//            new Point(new Pose(50, 30.000, Math.toRadians(0))),
-//            new Point(new Pose(65.000, 20.000, Math.toRadians(0))),
-//            new Point(new Pose(13.250, 24.000, Math.toRadians(0)))))
-//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-//            .build();
-//
-//    // Push Sample 2 Path (Lines 4 and 5)
-//    pushSample2Path = follower.pathBuilder()
-//            .addPath(new BezierCurve(
-//            new Point(new Pose(13.250, 24.000, Math.toRadians(0))),
-//            new Point(new Pose(65.000, 28, Math.toRadians(0))),
-//            new Point(new Pose(50, 13.5, Math.toRadians(0)))))
-//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-//            .addPath(new BezierLine(
-//            new Point(new Pose(50, 13.5, Math.toRadians(0))),
-//            new Point(new Pose(13.250, 13.5, Math.toRadians(0)))))
-//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-//            .build();
-//
-//    // Push Sample 3 Path (Lines 6 and 7)
-//    pushSample3Path = follower.pathBuilder()
-//            .addPath(new BezierCurve(
-//            new Point(new Pose(13.250, 12.500, Math.toRadians(0))),
-//            new Point(new Pose(65.000, 16.250, Math.toRadians(0))),
-//            new Point(new Pose(50, 8.75, Math.toRadians(0)))))
-//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-//            .addPath(new BezierLine(
-//            new Point(new Pose(50, 8.75, Math.toRadians(0))),
-//            new Point(new Pose(7.5, 8.75, Math.toRadians(0)))))
-//            .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
-//            .build();
 }
