@@ -142,6 +142,6 @@ public class Deposit {
     }
 
     public int pivotPos() {
-        return (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 20) % 360;
+        return (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 20) % 330;
     }
 }

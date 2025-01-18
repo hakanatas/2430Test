@@ -20,6 +20,7 @@ import com.pedropathing.pathgen.BezierLine;
 import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Timer;
+import com.pedropathing.util.Drawing;
 
 @Autonomous(name = "fiveSpec", group = "auto", preselectTeleOp = "Teleop")
 public class fiveSpec extends OpMode {
@@ -47,7 +48,7 @@ public class fiveSpec extends OpMode {
                 .addPath(new BezierLine(
                         new Point(new Pose(7.338, 65.859, Math.toRadians(0))),
                         new Point(new Pose(40, 65.859, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
 
         combinedPush = follower.pathBuilder()
@@ -56,26 +57,26 @@ public class fiveSpec extends OpMode {
                         new Point(new Pose(34.000, 67.000, Math.toRadians(0))),
                         new Point(new Pose(0.000, 48.000, Math.toRadians(0))),
                         new Point(new Pose(50, 30.000, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierCurve(
                         new Point(new Pose(50, 30.000, Math.toRadians(0))),
                         new Point(new Pose(65.000, 20.000, Math.toRadians(0))),
                         new Point(new Pose(22, 20.000, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierCurve(
                         new Point(new Pose(22, 20.000, Math.toRadians(0))),
                         new Point(new Pose(65.000, 28, Math.toRadians(0))),
                         new Point(new Pose(50, 13.5, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierLine(
                         new Point(new Pose(50, 13.5, Math.toRadians(0))),
                         new Point(new Pose(22, 13.5, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierCurve(
                         new Point(new Pose(22, 13.5, Math.toRadians(0))),
                         new Point(new Pose(65.000, 16.250, Math.toRadians(0))),
                         new Point(new Pose(50, 7.5, Math.toRadians(0)))))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(
                         // Line 1
                         new BezierLine(
@@ -140,10 +141,9 @@ public class fiveSpec extends OpMode {
             case 0:
                 if(!follower.isBusy()) {
                     // Start following our newly built path
-                    follower.followPath(preload, true);
+                    follower.followPath(preload, 1, true);
 
                 }
-
                 if (pathTimer.getElapsedTimeSeconds() > 0.2 && pathTimer.getElapsedTimeSeconds() < 1.5) {
                     deposit.setSlideTarget(500);
                 }
@@ -161,14 +161,13 @@ public class fiveSpec extends OpMode {
                     deposit.setSlideTarget(0);
                     deposit.setPivotTarget(90);
                     endEffector.setWallIntakePositionAlt();
-                    follower.followPath(combinedPush,false);
+                    follower.followPath(combinedPush, 1,false);
                     setPathState();
             }
                 break;
             case 2:
                 if(!follower.isBusy()) {
-                    follower.setMaxPower(0.7);
-                    follower.followPath(inter, true);
+                    follower.followPath(inter,0.6, true);
                     setPathState(4);
                 }
                 break;
@@ -181,8 +180,6 @@ public class fiveSpec extends OpMode {
                 break;
             case 5:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5) {
-                    follower.setMaxPower(1);
-
                     follower.followPath(score1, true); // Follow score1 path
                 }
 
@@ -211,7 +208,6 @@ public class fiveSpec extends OpMode {
                     deposit.setSlideTarget(0); // Reset slide to initial position
                     deposit.setPivotTarget(90); // Reset pivot
                     endEffector.setWallIntakePositionAlt(); // Prepare claw for intake
-                    follower.setMaxPower(0.7);
                     follower.followPath(return1, true); // Follow return1 path
                     setPathState(pathState + 1); // Transition to the next scoring path
                 }
@@ -229,7 +225,7 @@ public class fiveSpec extends OpMode {
                 intake();
                 break;
             case 11:
-                cycle2();
+                cycle();
                 if (pathTimer.getElapsedTimeSeconds() > 4.4) {
                     deposit.setSlideTarget(230);
                     if (deposit.liftPos < 250) {
@@ -262,35 +258,6 @@ public class fiveSpec extends OpMode {
     private void cycle() {
 
         if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.8) {
-            follower.setMaxPower(1);
-            follower.followPath(score2, true); // Follow score2 path
-        }
-        if (pathTimer.getElapsedTimeSeconds() > 2 && pathTimer.getElapsedTimeSeconds() < 2.5) {
-            endEffector.closeClaw();
-            deposit.setSlideTarget(110);
-        }
-
-        if (pathTimer.getElapsedTimeSeconds() > 2.5 && pathTimer.getElapsedTimeSeconds() < 3) {
-            endEffector.setSpecScore();
-            deposit.setSlideTarget(100);
-        }
-
-        if (pathTimer.getElapsedTimeSeconds() > 3.2 && pathTimer.getElapsedTimeSeconds() < 4.4) {
-            deposit.setSlideTarget(460);
-        }
-
-        if (pathTimer.getElapsedTimeSeconds() > 4.6) {
-            deposit.setSlideTarget(230);
-            if (deposit.liftPos < 250) {
-                endEffector.openClaw();
-                setPathState(pathState + 1); // Transition to next return
-            }
-        }
-    }
-
-    private void cycle2() {
-        if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.8) {
-            follower.setMaxPower(1);
             follower.followPath(score2, true); // Follow score2 path
         }
         if (pathTimer.getElapsedTimeSeconds() > 2 && pathTimer.getElapsedTimeSeconds() < 2.5) {
@@ -318,7 +285,6 @@ public class fiveSpec extends OpMode {
 
     private void intake() {
         if (!follower.isBusy() || follower.getVelocityMagnitude() < 0.05) {
-            follower.setMaxPower(0.7);
             deposit.setSlideTarget(0);
             deposit.setPivotTarget(90);
             endEffector.closeClaw();
@@ -349,12 +315,7 @@ public class fiveSpec extends OpMode {
 
         telemetry.update();
 
-        if (follower.getPose().getX()<=12  && follower.getPose().getY() <= 36) {
-            follower.setMaxPower(0.5);
 
-        } else {
-            follower.setMaxPower(1);
-        }
 
         deposit.update();
 
@@ -363,6 +324,7 @@ public class fiveSpec extends OpMode {
 
     @Override
     public void init() {
+        follower.setMaxPower(1);
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
