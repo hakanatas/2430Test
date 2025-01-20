@@ -21,11 +21,11 @@ public class Deposit {
     public TouchSensor slideLimit;
     private static final double[] autoSlideCoefficients = {0.08,0,0.0016, 0};
     private static final double[] autoPivotCoefficients = {0.035,0,0.001, 0.0025};
-    private static final double[] teleopSlideCoefficients = {0.1,0,0.0016, 0};
+    private static final double[] teleopSlideCoefficients = {0.045,0,0.0017, 0};
 
     //    private static final double[] teleopSlideCoefficients = {0.0125,0,0.0002, 0.0025};
 
-    private static final double[] teleopPivotCoefficients = {0.035,0,0.001, 0.0025};
+    private static final double[] teleopPivotCoefficients = {0.032,0,0.001, 0.0025};
 
     public PIDFController slidePIDF;
     public PIDFController pivotPIDF;
@@ -127,8 +127,8 @@ public class Deposit {
                 slidePIDF.reset();
                 pidfActive = true;
             } else {
-                rightLift.setPower(-0.4);
-                leftLift.setPower(-0.4);
+                rightLift.setPower(-0.6);
+                leftLift.setPower(-0.6);
             }
         }
 
@@ -142,6 +142,10 @@ public class Deposit {
     }
 
     public int pivotPos() {
-        return (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 20) % 330;
+        int pos = (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 24) % 360;
+        if (pos > 345) {
+            pos = 0;
+        }
+        return pos;
     }
 }

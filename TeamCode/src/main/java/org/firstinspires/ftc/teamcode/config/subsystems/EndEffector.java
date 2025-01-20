@@ -1,7 +1,10 @@
 package org.firstinspires.ftc.teamcode.config.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
@@ -14,12 +17,20 @@ public class EndEffector {
     public static double wristPosition = 0.45;
     public static double clawPosition = 0.75;
 
+    public static double lightPosition = 0.5;
+
     // Private Servo instances
     private final Servo armServoLeft;
     private final Servo armServoRight;
     private final Servo pivotServo;
     private final Servo wristServo;
     private final Servo clawServo;
+    private final Servo light;
+
+    DigitalChannel pin0;
+    DigitalChannel pin1;
+
+
 
     // Constructor
     public EndEffector(HardwareMap hardwareMap) {
@@ -28,30 +39,44 @@ public class EndEffector {
         pivotServo = hardwareMap.get(Servo.class, "pivotServo");
         wristServo = hardwareMap.get(Servo.class, "wristServo");
         clawServo = hardwareMap.get(Servo.class, "clawServo");
+        light = hardwareMap.get(Servo.class, "light");
         armServoRight.setDirection(Servo.Direction.REVERSE);
         armServoLeft.setDirection(Servo.Direction.FORWARD);
+        pin0 = hardwareMap.digitalChannel.get("digital0");
+        pin1 = hardwareMap.digitalChannel.get("digital1");
+
+
     }
 
     // Public setters
     public void setArmPosition(double position) {
-        armServoLeft.setPosition(position);
-        armServoRight.setPosition(position);
-        armPosition = position;
+        if (armPosition != position) {
+            armServoLeft.setPosition(position);
+            armServoRight.setPosition(position);
+            armPosition = position;
+        }
     }
 
     public void setPivotPosition(double position) {
-        pivotServo.setPosition(position);
-        pivotPosition = position;
+        if (pivotPosition != position) {
+            pivotServo.setPosition(position);
+            pivotPosition = position;
+        }
     }
 
     public void setWristPosition(double position) {
-        wristServo.setPosition(position);
-        wristPosition = position;
+        if (wristPosition != position) {
+            position = Range.clip(position, 0.45, 1.0);
+            wristServo.setPosition(position);
+            wristPosition = position;
+        }
     }
 
     public void setClawPosition(double position) {
-        clawServo.setPosition(position);
-        clawPosition = position;
+        if (clawPosition != position) {
+            clawServo.setPosition(position);
+            clawPosition = position;
+        }
     }
 
     // Public getters
@@ -100,7 +125,7 @@ public class EndEffector {
     public void setWallIntakePositionAlt() {setPositions(0.9, 0.38, 1, 0.75);}
 
     public void setSpecScore() {
-        setPositions(0.45, 0.15, 0.45, 0.95);
+        setPositions(0.45, 0.1, 0.45, 0.95);
     }
 
     public void openClaw() {
@@ -113,11 +138,11 @@ public class EndEffector {
 
     // Incremental adjustments
     public void incrementWristPosition(double step) {
-        setWristPosition(Range.clip(wristPosition + step, 0.0, 1.0));
+        setWristPosition(Range.clip(wristPosition + step, 0.45, 1.0));
     }
 
     public void decrementWristPosition(double step) {
-        setWristPosition(Range.clip(wristPosition - step, 0.0, 1.0));
+        setWristPosition(Range.clip(wristPosition - step, 0.45, 1.0));
     }
 
     public void incrementPivotPosition(double step) {
@@ -148,5 +173,22 @@ public class EndEffector {
         setArmPosition(armPos);
         setPivotPosition(pivotPos);
         setWristPosition(wristPos);
+    }
+
+
+
+    public boolean pin0() {
+        return pin0.getState();
+    }
+
+    public boolean pin1() {
+        return pin1.getState();
+    }
+
+    public void setLight(double position) {
+        if (lightPosition != position) {
+            lightPosition = position;
+            light.setPosition(position);
+        }
     }
 }

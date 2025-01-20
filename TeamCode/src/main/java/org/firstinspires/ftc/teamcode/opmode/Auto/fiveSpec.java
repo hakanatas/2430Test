@@ -122,14 +122,14 @@ public class fiveSpec extends OpMode {
                                 new Point(wall_intake, 68, Point.CARTESIAN),
                                 new Point(subX, 68.000, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
-                .addPath(new BezierLine(new Point(subX, 68, Point.CARTESIAN), new Point(subX, 72, Point.CARTESIAN)))
+                .addPath(new BezierLine(new Point(subX, 68, Point.CARTESIAN), new Point(subX, 66, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         return2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Point(subX, 72, Point.CARTESIAN),
-                                new Point(wall_intake, 72, Point.CARTESIAN),
+                                new Point(subX, 66, Point.CARTESIAN),
+                                new Point(wall_intake, 66, Point.CARTESIAN),
                                 new Point(subX, 28, Point.CARTESIAN),
                                 new Point(wall_intake, 28.000, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -142,6 +142,7 @@ public class fiveSpec extends OpMode {
                 if(!follower.isBusy()) {
                     // Start following our newly built path
                     follower.followPath(preload, 1, true);
+                    endEffector.setSpecScore();
 
                 }
                 if (pathTimer.getElapsedTimeSeconds() > 0.2 && pathTimer.getElapsedTimeSeconds() < 1.5) {
@@ -260,12 +261,12 @@ public class fiveSpec extends OpMode {
         if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.8) {
             follower.followPath(score2, true); // Follow score2 path
         }
-        if (pathTimer.getElapsedTimeSeconds() > 2 && pathTimer.getElapsedTimeSeconds() < 2.5) {
+        if (pathTimer.getElapsedTimeSeconds() > 1.8 && pathTimer.getElapsedTimeSeconds() < 2.3) {
             endEffector.closeClaw();
             deposit.setSlideTarget(110);
         }
 
-        if (pathTimer.getElapsedTimeSeconds() > 2.5 && pathTimer.getElapsedTimeSeconds() < 3) {
+        if (pathTimer.getElapsedTimeSeconds() > 2.3 && pathTimer.getElapsedTimeSeconds() < 3) {
             endEffector.setSpecScore();
             deposit.setSlideTarget(100);
         }
@@ -324,7 +325,6 @@ public class fiveSpec extends OpMode {
 
     @Override
     public void init() {
-        follower.setMaxPower(1);
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
@@ -339,6 +339,7 @@ public class fiveSpec extends OpMode {
         // If needed, set a starting pose (only if your system requires it)
         // follower.setStartingPose(new Pose(0,0, 0));
         follower.setStartingPose(startingPose);
+        follower.setMaxPower(1);
 
         deposit = new Deposit(hardwareMap, telemetry, true);
         endEffector = new EndEffector(hardwareMap);

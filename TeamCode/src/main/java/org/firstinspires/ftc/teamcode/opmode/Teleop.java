@@ -40,6 +40,7 @@ public class Teleop extends OpMode {
     private ElapsedTime liftResetTimer = new ElapsedTime();
     private boolean isLiftResetting = false;
 
+
     @Override
     public void init() {
         // Set up bulk caching
@@ -47,6 +48,7 @@ public class Teleop extends OpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
+
 
         // Initialize subsystems
         drive = new MecanumDrive();
@@ -73,6 +75,17 @@ public class Teleop extends OpMode {
 
     @Override
     public void loop() {
+
+        if (endEffector.pin0() && endEffector.pin1()) {
+            endEffector.setLight(0.388);
+        } else if (endEffector.pin0()) {
+            endEffector.setLight(0.611);
+        } else if (endEffector.pin1()) {
+            endEffector.setLight(0.29);
+        } else {
+            endEffector.setLight(0);
+        }
+
         //------------------------------------------
         // 1) Copy previous -> current gamepad
         //------------------------------------------
@@ -274,6 +287,11 @@ public class Teleop extends OpMode {
                         endEffector.setSafeIdle();
                         slides.setPivotTarget(10);
                         slides.setSlideTarget(50);
+                        if (specIntakeTimer.milliseconds() >= 100) {
+                            if (!endEffector.pin0() && !endEffector.pin1()) {
+                                intakeState = 1;
+                            }
+                        }
                         break;
                 }
                 break;
@@ -303,6 +321,11 @@ public class Teleop extends OpMode {
                 break;
 
             case 1:
+                if (!endEffector.pin0() && !endEffector.pin1()) {
+                    depositState = 0;
+                    specDepoTimer.reset();
+                    break;
+                }
                 endEffector.closeClaw();
                 if (specDepoTimer.milliseconds() > 300) {
                     depositState = 2;
@@ -320,12 +343,14 @@ public class Teleop extends OpMode {
                 break;
 
             case 4:
-                slides.setSlideTarget(230);
-                if (slides.liftPos < 250) {
+                slides.setSlideTarget(210);
+                if (slides.liftPos < 230) {
                     endEffector.openClaw();
-                    depositState = 4;
                 }
-                specDepoTimer.reset();
+                if (specDepoTimer.milliseconds() > 250) {
+                    depositState = 0;
+                    specDepoTimer.reset();
+                }
                 break;
             default:
                 specDepoTimer.reset();
@@ -355,6 +380,8 @@ public class Teleop extends OpMode {
         telemetry.addData("Pivot Pos", slides.pivotPos);
         telemetry.addData("Pivot Target", slides.pivotTarget);
         telemetry.addData("Error", slides.slidePIDF.getPositionError());
+        telemetry.addData("Pin0", endEffector.pin0());
+        telemetry.addData("Pin1", endEffector.pin1());
         telemetry.update();
     }
 
