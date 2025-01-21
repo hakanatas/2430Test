@@ -40,6 +40,14 @@ public class Teleop extends OpMode {
     private ElapsedTime liftResetTimer = new ElapsedTime();
     private boolean isLiftResetting = false;
 
+    // Example bounding box, in inches, around the origin or wherever you’ve chosen:
+    private static final double X_MIN = -24;  // left boundary
+    private static final double X_MAX =  24;  // right boundary
+    private static final double Y_MIN = -24;  // bottom boundary
+    private static final double Y_MAX =  24;  // top boundary
+    private static final double SMOOTH_ZONE = 4.0;
+    private static final boolean demo = false;
+
 
     @Override
     public void init() {
@@ -411,20 +419,123 @@ public class Teleop extends OpMode {
     // ------------------------------------------------
     // HELPER: Field-relative drive
     // ------------------------------------------------
+//    private Pose2D driveFieldRelative(double forward, double right, double rotate) {
+//        pinpoint.update();
+//        Pose2D pos = pinpoint.getPosition();  // Current position
+//
+//        double robotAngle = Math.toRadians(pos.getHeading(AngleUnit.DEGREES));
+//        double theta = Math.atan2(forward, right);
+//        double r = Math.hypot(forward, right);
+//        theta = org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+//                .normalizeRadians(theta - robotAngle);
+//
+//        double newForward = r * Math.sin(theta);
+//        double newRight   = r * Math.cos(theta);
+//
+//        if (demo) {
+//
+//        }
+//
+//        drive.drive(newForward, newRight, rotate);
+//        return pos;
+//    }
+
+
+
     private Pose2D driveFieldRelative(double forward, double right, double rotate) {
         pinpoint.update();
         Pose2D pos = pinpoint.getPosition();  // Current position
 
         double robotAngle = Math.toRadians(pos.getHeading(AngleUnit.DEGREES));
+
+        // Convert driver input into field-centric motion
         double theta = Math.atan2(forward, right);
         double r = Math.hypot(forward, right);
-        theta = org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-                .normalizeRadians(theta - robotAngle);
+        theta = AngleUnit.normalizeRadians(theta - robotAngle);
 
+        // These are the "robot-centric" forward & strafe after field correction
         double newForward = r * Math.sin(theta);
-        double newRight   = r * Math.cos(theta);
+        double newRight = r * Math.cos(theta);
 
+        double xPos = pos.getX(DistanceUnit.INCH);
+        double yPos = pos.getY(DistanceUnit.INCH);
+
+
+        if (demo) {
+            // ------------------------------
+            // X-AXIS SMOOTH CLAMP
+            // ------------------------------
+
+            // Left boundary
+            if (xPos < X_MIN) {
+                // We are already past the boundary. Stop any further left motion.
+                if (newRight < 0) newRight = 0;
+            } else {
+                // We are inside or near the boundary
+                double distFromLeft = xPos - X_MIN;  // how far from X_MIN
+                if (distFromLeft < SMOOTH_ZONE) {
+                    // If user is trying to move further left (negative right), scale the input
+                    if (newRight < 0) {
+                        double scale = distFromLeft / SMOOTH_ZONE;    // between 0..1
+                        newRight *= clamp(scale, 0, 1);
+                    }
+                }
+            }
+
+            // Right boundary
+            if (xPos > X_MAX) {
+                // Already past the boundary
+                if (newRight > 0) newRight = 0;
+            } else {
+                // Within or near the boundary
+                double distFromRight = X_MAX - xPos;  // how far from X_MAX
+                if (distFromRight < SMOOTH_ZONE) {
+                    // If user is trying to move further right (positive right), scale
+                    if (newRight > 0) {
+                        double scale = distFromRight / SMOOTH_ZONE;   // 0..1
+                        newRight *= clamp(scale, 0, 1);
+                    }
+                }
+            }
+
+            // ------------------------------
+            // Y-AXIS SMOOTH CLAMP
+            // ------------------------------
+
+            // Bottom boundary
+            if (yPos < Y_MIN) {
+                if (newForward < 0) newForward = 0;
+            } else {
+                double distFromBottom = yPos - Y_MIN;
+                if (distFromBottom < SMOOTH_ZONE) {
+                    if (newForward < 0) {
+                        double scale = distFromBottom / SMOOTH_ZONE;
+                        newForward *= clamp(scale, 0, 1);
+                    }
+                }
+            }
+
+            // Top boundary
+            if (yPos > Y_MAX) {
+                if (newForward > 0) newForward = 0;
+            } else {
+                double distFromTop = Y_MAX - yPos;
+                if (distFromTop < SMOOTH_ZONE) {
+                    if (newForward > 0) {
+                        double scale = distFromTop / SMOOTH_ZONE;
+                        newForward *= clamp(scale, 0, 1);
+                    }
+                }
+            }
+        }
+        // Now drive with our final scaled inputs
         drive.drive(newForward, newRight, rotate);
+
         return pos;
+    }
+
+    // Simple clamp helper
+    private double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
     }
 }
