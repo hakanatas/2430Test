@@ -54,6 +54,8 @@ public class Teleop extends OpMode {
         drive = new MecanumDrive();
         slides = new Deposit(hardwareMap, telemetry, false);
         endEffector = new EndEffector(hardwareMap);
+        endEffector.setLight(0.5);
+
 
         drive.init(hardwareMap);
         endEffector.setIdlePosition(); // set the end effector to idle position
@@ -76,14 +78,17 @@ public class Teleop extends OpMode {
     @Override
     public void loop() {
 
-        if (endEffector.pin0() && endEffector.pin1()) {
+        if (EndEffector.override) {
+            endEffector.setLight(0);
+        }
+        else if (endEffector.pin0() && endEffector.pin1()) {
             endEffector.setLight(0.388);
         } else if (endEffector.pin0()) {
             endEffector.setLight(0.611);
         } else if (endEffector.pin1()) {
             endEffector.setLight(0.29);
         } else {
-            endEffector.setLight(0);
+            endEffector.setLight(0.5);
         }
 
         //------------------------------------------
@@ -137,6 +142,10 @@ public class Teleop extends OpMode {
         boolean rightTriggerJustPressed =
                 (currentGamepad1.right_trigger > 0.5f) && (previousGamepad1.right_trigger <= 0.5f);
 
+        boolean shareJustPressed = (currentGamepad1.share && !previousGamepad1.share);
+        if (shareJustPressed) {
+            EndEffector.override = !EndEffector.override;
+        }
 
 
 //        if (circleJustPressed) {
@@ -287,7 +296,7 @@ public class Teleop extends OpMode {
                         endEffector.setSafeIdle();
                         slides.setPivotTarget(10);
                         slides.setSlideTarget(50);
-                        if (specIntakeTimer.milliseconds() >= 100) {
+                        if (specIntakeTimer.milliseconds() >= 150) {
                             if (!endEffector.pin0() && !endEffector.pin1()) {
                                 intakeState = 1;
                             }
@@ -298,6 +307,7 @@ public class Teleop extends OpMode {
 
             case 3:
                 slides.setPivotTarget(90);
+                endEffector.setObsDepositPosition();
                 specIntakeTimer.reset();
                 phase = 0;
                 break;

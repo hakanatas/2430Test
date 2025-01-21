@@ -27,6 +27,7 @@ public class EndEffector {
     private final Servo clawServo;
     private final Servo light;
 
+    public static boolean override = false;
     DigitalChannel pin0;
     DigitalChannel pin1;
 
@@ -107,11 +108,11 @@ public class EndEffector {
     }
 
     public void setPreSubPickupPosition() {
-        setPositions(0.52, 0.6, wristPosition, clawPosition);
+        setPositions(0.59, 0.57, wristPosition, clawPosition);
     }
 
     public void setSubPickupPosition() {
-        setPositions(0.56, 0.58, wristPosition, clawPosition);
+        setPositions(0.7, 0.52, wristPosition, clawPosition);
     }
 
     public void setObsDepositPosition() {
@@ -178,11 +179,11 @@ public class EndEffector {
 
 
     public boolean pin0() {
-        return pin0.getState();
+        return override || pin0.getState();
     }
 
     public boolean pin1() {
-        return pin1.getState();
+        return override || pin1.getState();
     }
 
     public void setLight(double position) {

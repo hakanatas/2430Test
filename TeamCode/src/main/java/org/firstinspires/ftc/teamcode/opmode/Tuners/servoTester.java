@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmode.Tuners;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.config.subsystems.EndEffector;
 
@@ -21,22 +22,22 @@ public class servoTester extends OpMode{
     }
 
     public void loop() {
-//        if (gamepad1.left_bumper) {
-//            decServoIndex();
-//        } else if (gamepad1.right_bumper) {
-//            incServoIndex();
-//        }
-//
-//        if (gamepad1.right_trigger > 0.5) {
-//            incServo();
-//        } else if (gamepad1.left_trigger > 0.5) {
-//            decServo();
-//        }
-//
-//        telemetry.addData(indexToServo(), indexToPos());
-//        telemetry.update();
+        Gamepad prev = gamepad1;
+        if (gamepad1.left_bumper) {
+            decServoIndex();
+        } else if (gamepad1.right_bumper) {
+            incServoIndex();
+        }
 
-        endEffector.init();
+        if (gamepad1.right_trigger > 0.5) {
+            incServo();
+        } else if (gamepad1.left_trigger > 0.5) {
+            decServo();
+        }
+
+        telemetry.addData(indexToServo(), indexToPos());
+        telemetry.update();
+
 
     }
 
@@ -89,16 +90,16 @@ public class servoTester extends OpMode{
     private void incServo() {
         switch (servoIndex) {
             case 0:
-                endEffector.setArmPosition(endEffector.getArmPosition() + 0.01);
+                endEffector.setArmPosition(endEffector.getArmPosition() + 0.005);
                 break;
             case 1:
-                endEffector.setPivotPosition(endEffector.getPivotPosition() + 0.01);
+                endEffector.setPivotPosition(endEffector.getPivotPosition() + 0.005);
                 break;
             case 2:
-                endEffector.setWristPosition(endEffector.getWristPosition() + 0.01);
+                endEffector.setWristPosition(endEffector.getWristPosition() + 0.005);
                 break;
             case 3:
-                endEffector.setClawPosition(endEffector.getClawPosition() + 0.01);
+                endEffector.setClawPosition(endEffector.getClawPosition() + 0.005);
                 break;
         }
     }
@@ -106,16 +107,16 @@ public class servoTester extends OpMode{
     private void decServo() {
         switch (servoIndex) {
             case 0:
-                endEffector.setArmPosition(endEffector.getArmPosition() - 0.01);
+                endEffector.setArmPosition(endEffector.getArmPosition() - 0.005);
                 break;
             case 1:
-                endEffector.setPivotPosition(endEffector.getPivotPosition() - 0.01);
+                endEffector.setPivotPosition(endEffector.getPivotPosition() - 0.005);
                 break;
             case 2:
-                endEffector.setWristPosition(endEffector.getWristPosition() - 0.01);
+                endEffector.setWristPosition(endEffector.getWristPosition() - 0.005);
                 break;
             case 3:
-                endEffector.setClawPosition(endEffector.getClawPosition() - 0.01);
+                endEffector.setClawPosition(endEffector.getClawPosition() - 0.005);
                 break;
         }
     }
