@@ -111,6 +111,11 @@ public class seperatedFiveSpec extends OpMode {
                                 new Point(subX, calcY(1), Point.CARTESIAN),
                                 new Point(30, calcY(1), Point.CARTESIAN),
                                 new Point(subX, 28, Point.CARTESIAN),
+                                new Point(wall_intake + 5, 28.000, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        new BezierLine(
+                                new Point(wall_intake + 5, 28.000, Point.CARTESIAN),
                                 new Point(wall_intake, 28.000, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -133,6 +138,11 @@ public class seperatedFiveSpec extends OpMode {
                                 new Point(subX, 28, Point.CARTESIAN),
                                 new Point(wall_intake, 28.000, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        new BezierLine(
+                                new Point(wall_intake + 5, 28.000, Point.CARTESIAN),
+                                new Point(wall_intake, 28.000, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         score3 = follower.pathBuilder()
                 .addPath(
@@ -153,6 +163,11 @@ public class seperatedFiveSpec extends OpMode {
                                 new Point(subX, 28, Point.CARTESIAN),
                                 new Point(wall_intake, 28.000, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        new BezierLine(
+                                new Point(wall_intake + 5, 28.000, Point.CARTESIAN),
+                                new Point(wall_intake, 28.000, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         score4 = follower.pathBuilder()
                 .addPath(
@@ -171,6 +186,11 @@ public class seperatedFiveSpec extends OpMode {
                                 new Point(subX, calcY(4), Point.CARTESIAN),
                                 new Point(30, calcY(4), Point.CARTESIAN),
                                 new Point(subX, 28, Point.CARTESIAN),
+                                new Point(wall_intake, 28.000, Point.CARTESIAN)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        new BezierLine(
+                                new Point(wall_intake + 5, 28.000, Point.CARTESIAN),
                                 new Point(wall_intake, 28.000, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -387,16 +407,16 @@ public class seperatedFiveSpec extends OpMode {
 
             switch (n) {
                 case 1:
-                    follower.followPath(return1, false); // Follow return1 path
+                    follower.followPath(return1, true); // Follow return1 path
                     break;
                 case 2:
-                    follower.followPath(return2, false); // Follow return2 path
+                    follower.followPath(return2, true); // Follow return2 path
                     break;
                 case 3:
-                    follower.followPath(return3, false); // Follow return2 path
+                    follower.followPath(return3, true); // Follow return2 path
                     break;
                 case 4:
-                    follower.followPath(return4, false); // Follow return2 path
+                    follower.followPath(return4, true); // Follow return2 path
                     break;
                 default:
                     break;
