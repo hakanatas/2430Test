@@ -108,7 +108,7 @@ public class EndEffector {
     }
 
     public void setPreSubPickupPosition() {
-        setPositions(0.59, 0.57, wristPosition, clawPosition);
+        setPositions(0.62, 0.53, wristPosition, clawPosition);
     }
 
     public void setSubPickupPosition() {

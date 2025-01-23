@@ -19,13 +19,16 @@ public class Deposit {
     public DcMotorEx rightLift, leftLift, pivot;
     public AnalogInput pivotEncoder;
     public TouchSensor slideLimit;
-    private static final double[] autoSlideCoefficients = {0.08,0,0.0016, 0};
+
     private static final double[] autoPivotCoefficients = {0.035,0,0.001, 0.0025};
-    private static final double[] teleopSlideCoefficients = {0.04,0,0.0017, 0};
+    private static final double[] teleopPivotCoefficients = {0.032,0,0.001, 0.0025};
+
+
+    private static final double[] autoSlideCoefficients = {0.08,0,0.0016, 0};
+    private static final double[] teleopSlideCoefficients = {0.04,0,0.0016, 0};
 
     //    private static final double[] teleopSlideCoefficients = {0.0125,0,0.0002, 0.0025};
 
-    private static final double[] teleopPivotCoefficients = {0.032,0,0.001, 0.0025};
 
     public PIDFController slidePIDF;
     public PIDFController pivotPIDF;
@@ -74,7 +77,7 @@ public class Deposit {
         pivot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
-        slidePIDF.setTolerance(12);
+        slidePIDF.setTolerance(15);
         pivotPIDF.setTolerance(2);
         setSlideTarget(Math.round((float) rightLift.getCurrentPosition() / 42) * -1);
         setPivotTarget(pivotPos());
@@ -82,12 +85,12 @@ public class Deposit {
 
     public void setSlideTarget(double target) {
         this.slideTarget = Range.clip(target, 0, 1100);
-        slidePIDF.setSetPoint(target);
+        slidePIDF.setSetPoint(slideTarget);
     }
 
     public void setPivotTarget(double target) {
         this.pivotTarget = Range.clip(target, 0, 121);
-        slidePIDF.setSetPoint(target);
+        slidePIDF.setSetPoint(pivotTarget);
     }
 
 
@@ -95,7 +98,7 @@ public class Deposit {
     public void update() {
         liftPos = liftPos();
         pivotPos = pivotPos();
-        slidePIDF.setF(slideF * Math.sin(Math.toRadians(pivotPos)));
+        /// slidePIDF.setF(slideF * Math.sin(Math.toRadians(pivotPos)));
         double liftPower = slidePIDF.calculate(liftPos, slideTarget);
         slidesReached = slidePIDF.atSetPoint() || (liftPos >= slideTarget && slideTarget == 1050);
         slidesRetracted = slideTarget <= 0 && slideLimit.isPressed();
@@ -115,6 +118,9 @@ public class Deposit {
             if (slidesRetracted) {
                 rightLift.setPower(0);
                 leftLift.setPower(0);
+            } else if (pivotPos <= 10 && slidesReached) {
+                rightLift.setPower(0);
+                rightLift.setPower(0);
             } else {
                 rightLift.setPower(liftPower);
                 leftLift.setPower(liftPower);
@@ -142,10 +148,15 @@ public class Deposit {
     }
 
     public int pivotPos() {
-        int pos = (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360) + 24) % 360;
-        if (pos > 345) {
-            pos = 0;
+        int pos = (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360)) % 360 + 19;
+        if (pos >= 360) {
+            pos -= 360;
+        } else if (pos < 0) {
+            pos += 360;
         }
+//        if (pos > 345) {
+//            pos = 0;
+//        }
         return pos;
     }
 }

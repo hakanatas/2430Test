@@ -37,16 +37,13 @@ public class Teleop extends OpMode {
     private ElapsedTime specIntakeTimer = new ElapsedTime();
     private ElapsedTime specDepoTimer = new ElapsedTime();
 
-    private ElapsedTime liftResetTimer = new ElapsedTime();
-    private boolean isLiftResetting = false;
-
     // Example bounding box, in inches, around the origin or wherever you’ve chosen:
-    private static final double X_MIN = -24;  // left boundary
-    private static final double X_MAX =  24;  // right boundary
-    private static final double Y_MIN = -24;  // bottom boundary
-    private static final double Y_MAX =  24;  // top boundary
+    private static final double X_MIN = -4;  // left boundary
+    private static final double X_MAX =  4;  // right boundary
+    private static final double Y_MIN = -4;  // bottom boundary
+    private static final double Y_MAX =  4;  // top boundary
     private static final double SMOOTH_ZONE = 4.0;
-    private static final boolean demo = false;
+    private static final boolean demo = true;
 
 
     @Override
@@ -63,6 +60,7 @@ public class Teleop extends OpMode {
         slides = new Deposit(hardwareMap, telemetry, false);
         endEffector = new EndEffector(hardwareMap);
         endEffector.setLight(0.5);
+        EndEffector.override = false;
 
 
         drive.init(hardwareMap);
@@ -156,40 +154,6 @@ public class Teleop extends OpMode {
         }
 
 
-//        if (circleJustPressed) {
-//            // Stop PIDF control
-//            slides.stopPIDF();
-//            // Set pivot target and idle position
-//            slides.setPivotTarget(90);
-//            endEffector.setIdlePosition();
-//            // Move the lift downward at -0.5 power
-//            slides.setLiftPower(-0.5);
-//            isLiftResetting = false; // Reset flag
-//        }
-//
-//        if (currentGamepad1.circle) {
-//            // Continue holding lift power while the circle is pressed
-//            slides.setLiftPower(-0.5);
-//        }
-//
-//        if (circleReleased) {
-//            // Stop lift motor and reset encoder
-//            slides.setLiftPower(0);
-//            slides.resetLiftEncoder();
-//
-//            // Start the timer for the delay
-//            liftResetTimer.reset();
-//            isLiftResetting = true;
-//        }
-//
-//        // Check if the delay has elapsed
-//        if (isLiftResetting && liftResetTimer.milliseconds() >= 150) {
-//            slides.startPIDF();
-//            isLiftResetting = false; // Reset the flag
-//        }
-
-
-
         //------------------------------------------
         // 4) Spec Intake (left bumper +/ left trigger -)
         //------------------------------------------
@@ -262,7 +226,7 @@ public class Teleop extends OpMode {
             case 0:
                 // pivot=0, slide=50, idle pos, open claw
                 slides.setPivotTarget(10);
-                slides.setSlideTarget(50);
+                slides.setSlideTarget(0);
                 endEffector.setIdlePosition();
                 endEffector.openClaw();
                 specIntakeTimer.reset();
@@ -303,8 +267,8 @@ public class Teleop extends OpMode {
                     case 1: // deposit
                         endEffector.setSafeIdle();
                         slides.setPivotTarget(10);
-                        slides.setSlideTarget(50);
-                        if (specIntakeTimer.milliseconds() >= 150) {
+                        slides.setSlideTarget(0);
+                        if (specIntakeTimer.milliseconds() >= 200) {
                             if (!endEffector.pin0() && !endEffector.pin1()) {
                                 intakeState = 1;
                             }
@@ -362,7 +326,7 @@ public class Teleop extends OpMode {
 
             case 4:
                 slides.setSlideTarget(210);
-                if (slides.liftPos < 230) {
+                if (slides.liftPos < 220) {
                     endEffector.openClaw();
                 }
                 if (specDepoTimer.milliseconds() > 250) {
@@ -390,16 +354,17 @@ public class Teleop extends OpMode {
         telemetry.addData("Position", data);
         telemetry.addData("Status", pinpoint.getDeviceStatus());
         telemetry.addData("Pinpoint Frequency", pinpoint.getFrequency());
-        telemetry.addData("Intake State", intakeState);
-        telemetry.addData("Deposit State", depositState);
-        telemetry.addData("At set point", slides.slidesReached);
+//        telemetry.addData("Intake State", intakeState);
+//        telemetry.addData("Deposit State", depositState);
+//        telemetry.addData("At set point", slides.slidesReached);
         telemetry.addData("Lift Pos", slides.liftPos);
         telemetry.addData("Lift Target", slides.slidePIDF.getSetPoint());
         telemetry.addData("Pivot Pos", slides.pivotPos);
         telemetry.addData("Pivot Target", slides.pivotTarget);
-        telemetry.addData("Error", slides.slidePIDF.getPositionError());
-        telemetry.addData("Pin0", endEffector.pin0());
-        telemetry.addData("Pin1", endEffector.pin1());
+
+//        telemetry.addData("Error", slides.slidePIDF.getPositionError());
+//        telemetry.addData("Pin0", endEffector.pin0());
+//        telemetry.addData("Pin1", endEffector.pin1());
         telemetry.update();
     }
 
@@ -407,7 +372,7 @@ public class Teleop extends OpMode {
     // HELPER: Configure the GoBilda Pinpoint device
     // ------------------------------------------------
     private void configurePinpoint() {
-        pinpoint.setOffsets(153.22873, -68.86620);
+        pinpoint.setOffsets(6.03262717 * 25.4,2.71126772 * 25.4);
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,
@@ -462,72 +427,13 @@ public class Teleop extends OpMode {
 
 
         if (demo) {
-            // ------------------------------
-            // X-AXIS SMOOTH CLAMP
-            // ------------------------------
 
-            // Left boundary
-            if (xPos < X_MIN) {
-                // We are already past the boundary. Stop any further left motion.
-                if (newRight < 0) newRight = 0;
-            } else {
-                // We are inside or near the boundary
-                double distFromLeft = xPos - X_MIN;  // how far from X_MIN
-                if (distFromLeft < SMOOTH_ZONE) {
-                    // If user is trying to move further left (negative right), scale the input
-                    if (newRight < 0) {
-                        double scale = distFromLeft / SMOOTH_ZONE;    // between 0..1
-                        newRight *= clamp(scale, 0, 1);
-                    }
-                }
-            }
-
-            // Right boundary
-            if (xPos > X_MAX) {
-                // Already past the boundary
-                if (newRight > 0) newRight = 0;
-            } else {
-                // Within or near the boundary
-                double distFromRight = X_MAX - xPos;  // how far from X_MAX
-                if (distFromRight < SMOOTH_ZONE) {
-                    // If user is trying to move further right (positive right), scale
-                    if (newRight > 0) {
-                        double scale = distFromRight / SMOOTH_ZONE;   // 0..1
-                        newRight *= clamp(scale, 0, 1);
-                    }
-                }
-            }
-
-            // ------------------------------
-            // Y-AXIS SMOOTH CLAMP
-            // ------------------------------
-
-            // Bottom boundary
-            if (yPos < Y_MIN) {
-                if (newForward < 0) newForward = 0;
-            } else {
-                double distFromBottom = yPos - Y_MIN;
-                if (distFromBottom < SMOOTH_ZONE) {
-                    if (newForward < 0) {
-                        double scale = distFromBottom / SMOOTH_ZONE;
-                        newForward *= clamp(scale, 0, 1);
-                    }
-                }
-            }
-
-            // Top boundary
-            if (yPos > Y_MAX) {
-                if (newForward > 0) newForward = 0;
-            } else {
-                double distFromTop = Y_MAX - yPos;
-                if (distFromTop < SMOOTH_ZONE) {
-                    if (newForward > 0) {
-                        double scale = distFromTop / SMOOTH_ZONE;
-                        newForward *= clamp(scale, 0, 1);
-                    }
-                }
-            }
         }
+
+        telemetry.addData("xPos", xPos);
+        telemetry.addData("yPos", yPos);
+        telemetry.addData("newForward", newForward);
+        telemetry.addData("newRight", newRight);
         // Now drive with our final scaled inputs
         drive.drive(newForward, newRight, rotate);
 
