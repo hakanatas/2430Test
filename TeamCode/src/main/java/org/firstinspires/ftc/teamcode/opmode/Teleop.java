@@ -64,7 +64,7 @@ public class Teleop extends OpMode {
 
 
         drive.init(hardwareMap);
-        endEffector.setIdlePosition(); // set the end effector to idle position
+        endEffector.init(); // set the end effector to idle position
 
         // Pinpoint driver initialization
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
@@ -77,6 +77,8 @@ public class Teleop extends OpMode {
         telemetry.addLine("Ready!");
         telemetry.update();
     }
+
+
 
 
 

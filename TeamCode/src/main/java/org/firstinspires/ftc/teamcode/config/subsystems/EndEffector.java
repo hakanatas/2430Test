@@ -12,12 +12,12 @@ import com.qualcomm.robotcore.util.Range;
 public class EndEffector {
 
     // Public static variables for FTC Dashboard
-    public static double armPosition = 0.45;
-    public static double pivotPosition = 0.23;
-    public static double wristPosition = 0.45;
-    public static double clawPosition = 0.75;
+    public static double armPosition = 0;
+    public static double pivotPosition = 0;
+    public static double wristPosition = 0;
+    public static double clawPosition = 0;
 
-    public static double lightPosition = 0.5;
+    public static double lightPosition = 0;
 
     // Private Servo instances
     private final Servo armServoLeft;
@@ -99,7 +99,19 @@ public class EndEffector {
 
     // Utility methods for preset positions
     public void setIdlePosition() {
-        setPositions(0.53, 0.35, 0.45, clawPosition);
+        setPositions(0.53, 0.35, 0.45, 0.35);
+    }
+
+    public void init() {
+        armServoLeft.setPosition(0.53);
+        armServoRight.setPosition(0.53);
+        pivotServo.setPosition(0.35);
+        wristServo.setPosition(0.45);
+        clawServo.setPosition(0.55);
+
+    }
+    public void setIdleAutoPosition() {
+        setPositions(0.53, 0.35, 0.45, 0.55);
     }
     public void setSafeIdle() {setPositions(0.55, 0.2, 0.45, clawPosition);}
 
@@ -108,7 +120,7 @@ public class EndEffector {
     }
 
     public void setPreSubPickupPosition() {
-        setPositions(0.62, 0.53, wristPosition, clawPosition);
+        setPositions(0.6, 0.53, wristPosition, clawPosition);
     }
 
     public void setSubPickupPosition() {
@@ -130,11 +142,11 @@ public class EndEffector {
     }
 
     public void openClaw() {
-        setClawPosition(0.75);
+        setClawPosition(0.35);
     }
 
     public void closeClaw() {
-        setClawPosition(0.95);
+        setClawPosition(0.55);
     }
 
     // Incremental adjustments
@@ -152,14 +164,6 @@ public class EndEffector {
 
     public void decrementPivotPosition(double step) {
         setPivotPosition(Range.clip(pivotPosition - step, 0.0, 1.0));
-    }
-
-    // Update method to apply positions
-    public void init() {
-        setArmPosition(armPosition);
-        setPivotPosition(pivotPosition);
-        setWristPosition(wristPosition);
-        setClawPosition(clawPosition);
     }
 
     // Unified setters for multiple positions
