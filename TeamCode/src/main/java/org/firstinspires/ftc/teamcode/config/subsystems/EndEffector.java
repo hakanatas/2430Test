@@ -14,7 +14,7 @@ public class EndEffector {
     // Public static variables for FTC Dashboard
     public static double armPosition = 0;
     public static double pivotPosition = 0;
-    public static double wristPosition = 0;
+    public static double wristPosition = 0.45;
     public static double clawPosition = 0;
 
     public static double lightPosition = 0;
@@ -28,6 +28,9 @@ public class EndEffector {
     private final Servo light;
 
     public static boolean override = false;
+
+    public boolean pin0State;
+    public boolean pin1State;
     DigitalChannel pin0;
     DigitalChannel pin1;
 
@@ -103,13 +106,21 @@ public class EndEffector {
     }
 
     public void init() {
-        armServoLeft.setPosition(0.53);
-        armServoRight.setPosition(0.53);
-        pivotServo.setPosition(0.35);
+        armServoLeft.setPosition(0.45);
+        armServoRight.setPosition(0.45);
+        pivotServo.setPosition(0.1);
         wristServo.setPosition(0.45);
         clawServo.setPosition(0.55);
-
     }
+
+//    public void init() {
+//        armServoLeft.setPosition(0.53);
+//        armServoRight.setPosition(0.53);
+//        pivotServo.setPosition(0.35);
+//        wristServo.setPosition(0.45);
+//        clawServo.setPosition(0.55);
+//
+//    }
     public void setIdleAutoPosition() {
         setPositions(0.53, 0.35, 0.45, 0.55);
     }
@@ -120,7 +131,7 @@ public class EndEffector {
     }
 
     public void setPreSubPickupPosition() {
-        setPositions(0.6, 0.53, wristPosition, clawPosition);
+        setPositions(0.58, 0.53, wristPosition, clawPosition);
     }
 
     public void setSubPickupPosition() {
@@ -132,13 +143,13 @@ public class EndEffector {
     }
 
     public void setWallIntakePosition() {
-        setPositions(0.62, 0.35, 1, 0.75);
+        setPositions(0.62, 0.35, 1, 0.35);
     }
 
-    public void setWallIntakePositionAlt() {setPositions(0.9, 0.38, 1, 0.75);}
+    public void setWallIntakePositionAlt() {setPositions(0.86, 0.35, 1, 0.35);}
 
     public void setSpecScore() {
-        setPositions(0.45, 0.1, 0.45, 0.95);
+        setPositions(0.45, 0.05, 0.45, 0.55);
     }
 
     public void openClaw() {
@@ -180,14 +191,21 @@ public class EndEffector {
         setWristPosition(wristPos);
     }
 
-
-
+    public void update() {
+        pin0State = pin0.getState();
+        pin1State = pin1.getState();
+    }
     public boolean pin0() {
-        return override || pin0.getState();
+        return override || pin0State;
     }
 
     public boolean pin1() {
-        return override || pin1.getState();
+        return override || pin1State;
+    }
+
+    public boolean either() {
+        // return pin1State || pin0State;
+        return true;
     }
 
     public void setLight(double position) {
