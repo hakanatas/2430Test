@@ -102,7 +102,7 @@ public class EndEffector {
 
     // Utility methods for preset positions
     public void setIdlePosition() {
-        setPositions(0.53, 0.35, 0.45, 0.35);
+        setPositions(0.53, 0.375, 0.45, 0.375);
     }
 
     public void init() {
@@ -110,28 +110,28 @@ public class EndEffector {
         armServoRight.setPosition(0.45);
         pivotServo.setPosition(0.1);
         wristServo.setPosition(0.45);
-        clawServo.setPosition(0.55);
+        clawServo.setPosition(0.14);
     }
 
 //    public void init() {
 //        armServoLeft.setPosition(0.53);
 //        armServoRight.setPosition(0.53);
-//        pivotServo.setPosition(0.35);
+//        pivotServo.setPosition(0.375);
 //        wristServo.setPosition(0.45);
-//        clawServo.setPosition(0.55);
+//        clawServo.setPosition(0.14);
 //
 //    }
     public void setIdleAutoPosition() {
-        setPositions(0.53, 0.35, 0.45, 0.55);
+        setPositions(0.53, 0.375, 0.45, 0.14);
     }
-    public void setSafeIdle() {setPositions(0.55, 0.2, 0.45, clawPosition);}
+    public void setSafeIdle() {setPositions(0.16, 0.2, 0.45, clawPosition);}
 
     public void setBucketScorePosition() {
-        setPositions(0.55, 0.2+0.29-0.22, pivotPosition, clawPosition);
+        setPositions(0.16, 0.2+0.29-0.22, pivotPosition, clawPosition);
     }
 
     public void setPreSubPickupPosition() {
-        setPositions(0.58, 0.53, wristPosition, clawPosition);
+        setPositions(0.59, 0.58, wristPosition, clawPosition);
     }
 
     public void setSubPickupPosition() {
@@ -143,21 +143,21 @@ public class EndEffector {
     }
 
     public void setWallIntakePosition() {
-        setPositions(0.62, 0.35, 1, 0.35);
+        setPositions(0.62, 0.375, 1, 0.375);
     }
 
-    public void setWallIntakePositionAlt() {setPositions(0.86, 0.35, 1, 0.35);}
+    public void setWallIntakePositionAlt() {setPositions(0.90, 0.375, 1, 0.375);}
 
     public void setSpecScore() {
-        setPositions(0.45, 0.05, 0.45, 0.55);
+        setPositions(0.45, 0.08, 0.45, 0.14);
     }
 
     public void openClaw() {
-        setClawPosition(0.35);
+        setClawPosition(0.375);
     }
 
     public void closeClaw() {
-        setClawPosition(0.55);
+        setClawPosition(0.14);
     }
 
     // Incremental adjustments
@@ -191,19 +191,21 @@ public class EndEffector {
         setWristPosition(wristPos);
     }
 
-    public void update() {
+    public boolean pin0() {
         pin0State = pin0.getState();
         pin1State = pin1.getState();
-    }
-    public boolean pin0() {
         return override || pin0State;
     }
 
     public boolean pin1() {
+        pin0State = pin0.getState();
+        pin1State = pin1.getState();
         return override || pin1State;
     }
 
     public boolean either() {
+        pin0State = pin0.getState();
+        pin1State = pin1.getState();
         // return pin1State || pin0State;
         return true;
     }

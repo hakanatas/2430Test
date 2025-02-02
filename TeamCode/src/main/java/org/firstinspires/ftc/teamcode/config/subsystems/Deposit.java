@@ -90,7 +90,7 @@ public class Deposit {
 
     public void setPivotTarget(double target) {
         this.pivotTarget = Range.clip(target, 0, 121);
-        slidePIDF.setSetPoint(pivotTarget);
+        pivotPIDF.setSetPoint(pivotTarget);
     }
 
 
@@ -148,15 +148,15 @@ public class Deposit {
     }
 
     public int pivotPos() {
-        int pos = (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360)) % 360 + 19;
+        int pos = (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360)) % 360 - 168;
         if (pos >= 360) {
             pos -= 360;
         } else if (pos < 0) {
             pos += 360;
         }
-//        if (pos > 345) {
-//            pos = 0;
-//        }
+        if (pos > 345) {
+            pos = 0;
+        }
         return pos;
     }
 }

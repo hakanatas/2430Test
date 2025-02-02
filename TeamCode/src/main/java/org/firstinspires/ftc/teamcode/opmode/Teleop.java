@@ -28,7 +28,9 @@ public class Teleop extends OpMode {
 
     // Gamepad snapshots
     private Gamepad currentGamepad1 = new Gamepad();
+    private Gamepad currentGamepad2 = new Gamepad();
     private Gamepad previousGamepad1 = new Gamepad();
+    private Gamepad previousGamepad2 = new Gamepad();
 
     // State machine variables
     private int intakeState = -1;
@@ -60,7 +62,7 @@ public class Teleop extends OpMode {
         slides = new Deposit(hardwareMap, telemetry, false);
         endEffector = new EndEffector(hardwareMap);
         endEffector.setLight(0.5);
-        EndEffector.override = false;
+        EndEffector.override = true;
 
 
         drive.init(hardwareMap);
@@ -83,8 +85,6 @@ public class Teleop extends OpMode {
 
     @Override
     public void loop() {
-        endEffector.update();
-
         if (EndEffector.override) {
             endEffector.setLight(0);
         }
@@ -103,8 +103,10 @@ public class Teleop extends OpMode {
         //------------------------------------------
         // First, remember what the previous state was
         previousGamepad1.copy(currentGamepad1);
+        previousGamepad2.copy(currentGamepad2);
         // Then copy the new hardware state into current
         currentGamepad1.copy(gamepad1);
+        currentGamepad2.copy(gamepad2);
 
         //------------------------------------------
         // 2) Drive / IMU Controls
@@ -116,16 +118,16 @@ public class Teleop extends OpMode {
         Pose2D currentPose = driveFieldRelative(forward, strafe, rotate);
 
         // If x is pressed, reset IMU
-        if (currentGamepad1.square) {
+        if (currentGamepad1.square || currentGamepad2.square) {
             pinpoint.resetPosAndIMU();
         }
         // If y is pressed, recalibrate IMU
-        if (currentGamepad1.triangle) {
+        if (currentGamepad1.triangle || currentGamepad2.triangle) {
             pinpoint.recalibrateIMU();
         }
         // Circle button logic
-        boolean circleJustPressed = currentGamepad1.circle && !previousGamepad1.circle;
-        boolean circleReleased = !currentGamepad1.circle && previousGamepad1.circle;
+        boolean circleJustPressed = (currentGamepad1.circle && !previousGamepad1.circle) || (currentGamepad2.circle && !previousGamepad2.circle);
+        boolean circleReleased = (!currentGamepad1.circle && previousGamepad1.circle) || (!currentGamepad2.circle && previousGamepad2.circle);
         if (circleJustPressed) {
             endEffector.setIdlePosition();
             intakeState = -1;
@@ -169,7 +171,7 @@ public class Teleop extends OpMode {
         // 5) Spec Deposit (right bumper +/ right trigger -)
         //------------------------------------------
         if (rightBumperJustPressed) {
-            depositState = (depositState + 1) % 5; // cycle 0..4
+            depositState = (depositState + 1) % 6; // cycle 0..4
         }
         if (rightTriggerJustPressed) {
             depositState = 0; // cycle 0..4
@@ -218,6 +220,21 @@ public class Teleop extends OpMode {
             if (currentGamepad1.dpad_down) {
                 endEffector.decrementWristPosition(0.02);
             }
+        }
+
+
+
+        if (currentGamepad2.dpad_up) {
+            endEffector.incrementWristPosition(0.02);
+        }
+        if (currentGamepad2.dpad_down) {
+            endEffector.decrementWristPosition(0.02);
+        }
+        if (currentGamepad2.dpad_right) {
+            endEffector.incrementPivotPosition(0.02);
+        }
+        if (currentGamepad2.dpad_left) {
+            endEffector.decrementPivotPosition(0.02);
         }
 
         //------------------------------------------
@@ -302,8 +319,9 @@ public class Teleop extends OpMode {
                 endEffector.openClaw();
                 specDepoTimer.reset();
                 break;
-
             case 1:
+                break;
+            case 2:
                 if (!endEffector.pin0() && !endEffector.pin1()) {
                     depositState = 0;
                     specDepoTimer.reset();
@@ -315,17 +333,17 @@ public class Teleop extends OpMode {
                     specDepoTimer.reset();
                 }
                 break;
-            case 2:
+            case 3:
                 endEffector.setSpecScore();
                 specDepoTimer.reset();
                 break;
 
-            case 3:
+            case 4:
                 slides.setSlideTarget(475);
                 specDepoTimer.reset();
                 break;
 
-            case 4:
+            case 5:
                 slides.setSlideTarget(210);
                 if (slides.liftPos < 220) {
                     endEffector.openClaw();
@@ -441,8 +459,5 @@ public class Teleop extends OpMode {
         return pos;
     }
 
-    // Simple clamp helper
-    private double clamp(double value, double min, double max) {
-        return Math.max(min, Math.min(max, value));
-    }
+
 }

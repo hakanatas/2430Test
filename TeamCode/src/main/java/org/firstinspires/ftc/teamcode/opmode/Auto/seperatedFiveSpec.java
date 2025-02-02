@@ -32,14 +32,14 @@ public class seperatedFiveSpec extends OpMode {
     private int pathState;
 
     private PathChain preload, combinedPush, score1, return1, score2, return2, score3, return3, score4, return4, inter, line, reverseLine, repickup;
-    private final Pose startingPose =  new Pose   (7, 65.859, Math.toRadians(0));
+    private final Pose startingPose =  new Pose   (7, 65.859 - 12, Math.toRadians(0));
 
-    private double wall_intake = 7.1;
-    public double wall_offset = 0.5;
+    private double wall_intake = 7;
+    public double wall_offset = 1.2;
     private double subX = 39.7;
     private double startY = 65.859;
     private double yInc = 2;
-    private double splineControl = 27;
+    private double splineControl = 22;
 
 
     /**
@@ -50,7 +50,7 @@ public class seperatedFiveSpec extends OpMode {
         // Preload path (Line 1)
         preload = follower.pathBuilder()
                 .addPath(new BezierLine(
-                        new Point(new Pose(7.338, 65.859, Math.toRadians(0))),
+                        new Point(new Pose(7.338, 65.859 - 12, Math.toRadians(0))),
                         new Point(new Pose(40, 65.859, Math.toRadians(0)))))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -95,7 +95,7 @@ public class seperatedFiveSpec extends OpMode {
                         // Line 2
                         new BezierCurve(
                                 new Point(19, 7.5, Point.CARTESIAN),
-                                new Point(17.3, 13, Point.CARTESIAN),
+                                new Point(19, 30, Point.CARTESIAN),
                                 new Point(wall_intake, 30, Point.CARTESIAN)
                         )
                 )
@@ -205,7 +205,7 @@ public class seperatedFiveSpec extends OpMode {
                 }
                 break;
             case 1:
-                if (follower.getPose().getX() > 15 && follower.isBusy()) {
+                if (follower.getPose().getX() > 10 && follower.isBusy()) {
                     deposit.setSlideTarget(490);
                 }
 
@@ -229,36 +229,32 @@ public class seperatedFiveSpec extends OpMode {
                 break;
             case 3:
                 if(!follower.isBusy()) {
-                    follower.followPath(inter,0.6, false);
+                    follower.followPath(inter,0.4, false);
                     setPathState();
                 }
                 break;
             case 4:
-                if (!follower.isBusy()) {
+                if ((!follower.isBusy() || follower.getPose().getX() < 8) && follower.getVelocityMagnitude() < 0.5 && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
                     endEffector.closeClaw();
                     deposit.setSlideTarget(215);
                     setPathState();
-                } else {
-                    if (!follower.isBusy() || follower.getVelocityMagnitude() < 0.8 && !endEffector.either()) {
-                        follower.followPath(repickup, 0.5, false);
-                    }
                 }
                 break;
             case 5:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
+                if ((!follower.isBusy() || follower.getPose().getX() < 8) && follower.getVelocityMagnitude() < 0.5 && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
                     endEffector.closeClaw();
                     follower.followPath(score1, false);
                     setPathState();
                 }
                 break;
             case 6:
-                if (follower.getPose().getX() > 16 && follower.isBusy()) {
+                if (follower.getPose().getX() > 15 && follower.isBusy()) {
                     deposit.setSlideTarget(120);
                     endEffector.setSpecScore(); // Adjust claw for scoring
                     // Set initial slide position
                 }
 
-                if (follower.getPose().getY() > 48 && follower.isBusy()) {
+                if (follower.getPose().getY() > 40 && follower.isBusy()) {
                     deposit.setSlideTarget(460);
                 }
 
@@ -291,29 +287,32 @@ public class seperatedFiveSpec extends OpMode {
                 // Return 1
                 if (!follower.isBusy()) {
                     endEffector.closeClaw();
-                    deposit.setSlideTarget(215);
-                    setPathState();
+                    if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                        deposit.setSlideTarget(215);
+                        setPathState();
+                    }
                 } else {
                     if (!follower.isBusy() || follower.getVelocityMagnitude() < 0.8 && !endEffector.either()) {
                         follower.followPath(repickup, 0.5, false);
                     }
+                    pathTimer.resetTimer();
                 }
                 break;
             case 10:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
+                if ((!follower.isBusy() || follower.getPose().getX() < 8) && follower.getVelocityMagnitude() < 0.5 && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
                     endEffector.closeClaw();
                     follower.followPath(score2, false);
                     setPathState();
                 }
                 break;
             case 11:
-                if (follower.getPose().getX() > 16 && follower.isBusy()) {
+                if (follower.getPose().getX() > 15 && follower.isBusy()) {
                     deposit.setSlideTarget(120);
                     endEffector.setSpecScore(); // Adjust claw for scoring
                     // Set initial slide position
                 }
 
-                if (follower.getPose().getY() > 48 && follower.isBusy()) {
+                if (follower.getPose().getY() > 40 && follower.isBusy()) {
                     deposit.setSlideTarget(460);
                 }
 
@@ -346,29 +345,32 @@ public class seperatedFiveSpec extends OpMode {
                 // Return 1
                 if (!follower.isBusy()) {
                     endEffector.closeClaw();
-                    deposit.setSlideTarget(215);
-                    setPathState();
+                    if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                        deposit.setSlideTarget(215);
+                        setPathState();
+                    }
                 } else {
                     if (!follower.isBusy() || follower.getVelocityMagnitude() < 0.8 && !endEffector.either()) {
                         follower.followPath(repickup, 0.5, false);
                     }
+                    pathTimer.resetTimer();
                 }
                 break;
             case 15:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
+                if ((!follower.isBusy() || follower.getPose().getX() < 8) && follower.getVelocityMagnitude() < 0.5 && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
                     endEffector.closeClaw();
                     follower.followPath(score3, false);
                     setPathState();
                 }
                 break;
             case 16:
-                if (follower.getPose().getX() > 16 && follower.isBusy()) {
+                if (follower.getPose().getX() > 15 && follower.isBusy()) {
                     deposit.setSlideTarget(120);
                     endEffector.setSpecScore(); // Adjust claw for scoring
                     // Set initial slide position
                 }
 
-                if (follower.getPose().getY() > 48 && follower.isBusy()) {
+                if (follower.getPose().getY() > 40 && follower.isBusy()) {
                     deposit.setSlideTarget(460);
                 }
 
@@ -393,37 +395,39 @@ public class seperatedFiveSpec extends OpMode {
                 break;
             case 18:
                 if(!follower.isBusy()) {
-                    follower.followPath(line,0.6, false);
+                    follower.followPath(line,1, false);
                     setPathState(-1);
                 }
                 break;
             case 19:
-                // Return 1
                 if (!follower.isBusy()) {
                     endEffector.closeClaw();
-                    deposit.setSlideTarget(215);
-                    setPathState();
+                    if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                        deposit.setSlideTarget(215);
+                        setPathState();
+                    }
                 } else {
                     if (!follower.isBusy() || follower.getVelocityMagnitude() < 0.8 && !endEffector.either()) {
                         follower.followPath(repickup, 0.5, false);
                     }
+                    pathTimer.resetTimer();
                 }
                 break;
             case 20:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
+                if ((!follower.isBusy() || follower.getPose().getX() < 8) && follower.getVelocityMagnitude() < 0.5 && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
                     endEffector.closeClaw();
                     follower.followPath(score4, false);
                     setPathState();
                 }
                 break;
             case 21:
-                if (follower.getPose().getX() > 16 && follower.isBusy()) {
+                if (follower.getPose().getX() > 15 && follower.isBusy()) {
                     deposit.setSlideTarget(120);
                     endEffector.setSpecScore(); // Adjust claw for scoring
                     // Set initial slide position
                 }
 
-                if (follower.getPose().getY() > 48 && follower.isBusy()) {
+                if (follower.getPose().getY() > 40 && follower.isBusy()) {
                     deposit.setSlideTarget(460);
                 }
 
