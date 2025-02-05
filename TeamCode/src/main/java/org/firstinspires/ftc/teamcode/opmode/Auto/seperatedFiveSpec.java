@@ -89,6 +89,15 @@ public class seperatedFiveSpec extends OpMode {
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                .addPath(
+                        // Line 2
+                        new BezierCurve(
+                                new Point(19, 7.5, Point.CARTESIAN),
+                                new Point(19, 30, Point.CARTESIAN),
+                                new Point(wall_intake, 30, Point.CARTESIAN)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         inter = follower.pathBuilder()
                 .addPath(
@@ -209,7 +218,7 @@ public class seperatedFiveSpec extends OpMode {
                     deposit.setSlideTarget(490);
                 }
 
-                if (follower.getPose().getX() >= 19 && !follower.isBusy() && follower.getVelocityMagnitude() < 0.5) {
+                if (!follower.isBusy() && follower.getPose().getX() >= 19 && follower.getVelocityMagnitude() < 0.5) {
                     deposit.setSlideTarget(230);
                     if (deposit.liftPos < 250) {
                         endEffector.openClaw();
@@ -224,15 +233,15 @@ public class seperatedFiveSpec extends OpMode {
                     deposit.setPivotTarget(90);
                     endEffector.setWallIntakePositionAlt();
                     follower.followPath(combinedPush, 1,false);
-                    setPathState();
+                    setPathState(4);
                 }
                 break;
-            case 3:
-                if(!follower.isBusy()) {
-                    follower.followPath(inter,0.4, false);
-                    setPathState();
-                }
-                break;
+//            case 3:
+//                if(!follower.isBusy()) {
+//                    follower.followPath(inter,0.7, false);
+//                    setPathState();
+//                }
+//                break;
             case 4:
                 if ((!follower.isBusy() || follower.getPose().getX() < 8) && follower.getVelocityMagnitude() < 0.5 && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
                     endEffector.closeClaw();
@@ -273,7 +282,7 @@ public class seperatedFiveSpec extends OpMode {
                     deposit.setSlideTarget(0);
                     deposit.setPivotTarget(90);
                     endEffector.setWallIntakePositionAlt();
-                    follower.followPath(return1,1, true);
+                    follower.followPath(return1,1, false);
                     setPathState();
                 }
                 break;
@@ -331,7 +340,7 @@ public class seperatedFiveSpec extends OpMode {
                     deposit.setSlideTarget(0);
                     deposit.setPivotTarget(90);
                     endEffector.setWallIntakePositionAlt();
-                    follower.followPath(return2,1, true);
+                    follower.followPath(return2,1, false);
                     setPathState();
                 }
                 break;
@@ -349,11 +358,6 @@ public class seperatedFiveSpec extends OpMode {
                         deposit.setSlideTarget(215);
                         setPathState();
                     }
-                } else {
-                    if (!follower.isBusy() || follower.getVelocityMagnitude() < 0.8 && !endEffector.either()) {
-                        follower.followPath(repickup, 0.5, false);
-                    }
-                    pathTimer.resetTimer();
                 }
                 break;
             case 15:
@@ -389,14 +393,14 @@ public class seperatedFiveSpec extends OpMode {
                     deposit.setSlideTarget(0);
                     deposit.setPivotTarget(90);
                     endEffector.setWallIntakePositionAlt();
-                    follower.followPath(return3,1, true);
+                    follower.followPath(return3,1, false);
                     setPathState();
                 }
                 break;
             case 18:
                 if(!follower.isBusy()) {
                     follower.followPath(line,1, false);
-                    setPathState(-1);
+                    setPathState();
                 }
                 break;
             case 19:
@@ -472,7 +476,6 @@ public class seperatedFiveSpec extends OpMode {
 
 
         telemetry.update();
-        endEffector.update();
 
 
 

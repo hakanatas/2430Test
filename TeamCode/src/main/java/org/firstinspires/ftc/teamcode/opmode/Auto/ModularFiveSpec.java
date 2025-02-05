@@ -1,11 +1,10 @@
 package org.firstinspires.ftc.teamcode.opmode.Auto;
 
-import com.pedropathing.pathgen.Path;
 import com.pedropathing.util.Constants;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.teamcode.config.subsystems.Deposit;
 import org.firstinspires.ftc.teamcode.config.subsystems.EndEffector;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.FConstants;
@@ -32,7 +31,6 @@ public class ModularFiveSpec extends OpMode {
     private static final double Y_INCREMENT = 2;
     private static final double SPLINE_CONTROL = 22;
     // Use slide positions as needed
-    private static final int[] SCORE_SLIDE_POSITIONS = {490, 460, 460}; // For the three cycles
     private static final int INTAKE_SLIDE_POSITION = 215;
 
     // Subsystems
@@ -55,7 +53,7 @@ public class ModularFiveSpec extends OpMode {
     private AutoState currentState = AutoState.PRELOAD;
     // Cycle count for cycles after push (we want 3 cycles)
     private int cycleCount = 0;
-    private static final int MAX_CYCLES = 3;
+    private static final int MAX_CYCLES = 4;
 
     // Path sequence list
     private List<PathChain> pathSequence = new ArrayList<>();
@@ -255,7 +253,7 @@ public class ModularFiveSpec extends OpMode {
                 deposit.setSlideTarget(INTAKE_SLIDE_POSITION);
                 // If we are coming from the push path, move into the cycle phase.
                 // Otherwise, we are in a cycle intake.
-                currentState = (cycleCount == 0) ? AutoState.SCORE_CYCLE : AutoState.SCORE_CYCLE;
+                currentState = AutoState.SCORE_CYCLE;
                 // Increment cycle count if this was a cycle intake (not the push intake)
                 if (cycleCount > 0 || cycleCount == 0) {
                     cycleCount++;  // For push intake, this makes cycleCount==1.
