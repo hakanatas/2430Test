@@ -2,7 +2,8 @@ package org.firstinspires.ftc.teamcode.config.subsystems;
 
 import android.text.method.Touch;
 
-import com.arcrobotics.ftclib.controller.PIDFController;
+import com.seattlesolvers.solverslib.controller.PIDFController;
+
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;

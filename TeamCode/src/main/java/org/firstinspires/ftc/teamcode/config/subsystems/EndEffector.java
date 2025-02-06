@@ -162,11 +162,13 @@ public class EndEffector {
 
     // Incremental adjustments
     public void incrementWristPosition(double step) {
-        setWristPosition(Range.clip(wristPosition + step, 0.45, 1.0));
+        // setWristPosition(Range.clip(wristPosition + step, 0.45, 1.0));
+        setWristPosition(wrap(wristPosition + step, 0.45, 1.0));
     }
 
     public void decrementWristPosition(double step) {
-        setWristPosition(Range.clip(wristPosition - step, 0.45, 1.0));
+        // setWristPosition(Range.clip(wristPosition - step, 0.45, 1.0));
+        setWristPosition(wrap(wristPosition - step, 0.45, 1.0));
     }
 
     public void incrementPivotPosition(double step) {
@@ -215,5 +217,16 @@ public class EndEffector {
             lightPosition = position;
             light.setPosition(position);
         }
+    }
+
+    public static double wrap(double value, double min, double max) {
+        double range = max - min;
+        // Bring the value into a zero-based range
+        double wrappedValue = (value - min) % range;
+        // Handle negative values correctly
+        if (wrappedValue < 0) {
+            wrappedValue += range;
+        }
+        return wrappedValue + min;
     }
 }

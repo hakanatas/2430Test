@@ -3,8 +3,12 @@ package org.firstinspires.ftc.teamcode.opmode;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.Gamepad;
+import com.seattlesolvers.solverslib.gamepad.GamepadEx;
+import com.seattlesolvers.solverslib.gamepad.TriggerReader;
+import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -27,26 +31,32 @@ public class Teleop extends OpMode {
     private GoBildaPinpointDriver pinpoint;
 
     // Gamepad snapshots
-    private Gamepad currentGamepad1 = new Gamepad();
-    private Gamepad currentGamepad2 = new Gamepad();
-    private Gamepad previousGamepad1 = new Gamepad();
-    private Gamepad previousGamepad2 = new Gamepad();
+    private GamepadEx player1 = new GamepadEx(gamepad1);
+    private GamepadEx player2 = new GamepadEx(gamepad2);
+
+    TriggerReader rightTriggerReader = new TriggerReader(
+            player1, GamepadKeys.Trigger.RIGHT_TRIGGER
+    );
+
+    TriggerReader leftTriggerReader = new TriggerReader(
+            player1, GamepadKeys.Trigger.LEFT_TRIGGER
+    );
 
     // State machine variables
     private int intakeState = -1;
     private int depositState = -1;
-    private int phase = 0; // used in your multi-phase intake logic
-    private ElapsedTime specIntakeTimer = new ElapsedTime();
-    private ElapsedTime specDepoTimer = new ElapsedTime();
+    private boolean specScoring = true;
+    private int phase = 0;  // used in multi-phase intake logic
+    private ElapsedTime intakeTimer = new ElapsedTime();
+    private ElapsedTime depositTimer = new ElapsedTime();
 
-    // Example bounding box, in inches, around the origin or wherever you’ve chosen:
-    private static final double X_MIN = -4;  // left boundary
-    private static final double X_MAX =  4;  // right boundary
-    private static final double Y_MIN = -4;  // bottom boundary
-    private static final double Y_MAX =  4;  // top boundary
+    // Demo field-bound example (not actively used, can remove if unneeded)
+    private static final double X_MIN = -4;
+    private static final double X_MAX =  4;
+    private static final double Y_MIN = -4;
+    private static final double Y_MAX =  4;
     private static final double SMOOTH_ZONE = 4.0;
     private static final boolean demo = true;
-
 
     @Override
     public void init() {
@@ -56,39 +66,38 @@ public class Teleop extends OpMode {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-
         // Initialize subsystems
         drive = new MecanumDrive();
         slides = new Deposit(hardwareMap, telemetry, false);
         endEffector = new EndEffector(hardwareMap);
+
         endEffector.setLight(0.5);
         EndEffector.override = true;
-
-
         drive.init(hardwareMap);
+
         // Pinpoint driver initialization
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         configurePinpoint();
 
-        // Reset your timers, etc.
-        specIntakeTimer.reset();
-        specDepoTimer.reset();
+        // Reset timers
+        intakeTimer.reset();
+        depositTimer.reset();
 
         telemetry.addLine("Ready!");
         telemetry.update();
     }
 
-
-
-
-
-
     @Override
     public void loop() {
+        // Handle Spec / Samp Deposit
+        if (player1.getButton(GamepadKeys.Button.TOUCHPAD_FINGER_1) && player1.getButton(GamepadKeys.Button.TOUCHPAD_FINGER_2)) {
+            specScoring = !specScoring;
+        }
+
+        // Handle LED override logic
         if (EndEffector.override) {
             endEffector.setLight(0);
-        }
-        else if (endEffector.pin0() && endEffector.pin1()) {
+        } else if (endEffector.pin0() && endEffector.pin1()) {
             endEffector.setLight(0.388);
         } else if (endEffector.pin0()) {
             endEffector.setLight(0.611);
@@ -98,36 +107,23 @@ public class Teleop extends OpMode {
             endEffector.setLight(0.5);
         }
 
-        //------------------------------------------
-        // 1) Copy previous -> current gamepad
-        //------------------------------------------
-        // First, remember what the previous state was
-        previousGamepad1.copy(currentGamepad1);
-        previousGamepad2.copy(currentGamepad2);
-        // Then copy the new hardware state into current
-        currentGamepad1.copy(gamepad1);
-        currentGamepad2.copy(gamepad2);
 
-        //------------------------------------------
-        // 2) Drive / IMU Controls
-        //------------------------------------------
-        double forward = -currentGamepad1.left_stick_y;
-        double strafe  =  currentGamepad1.left_stick_x;
-        double rotate  =  currentGamepad1.right_stick_x;
-
+        // 2) Field-relative drive / IMU Controls
+        double forward = -player1.getLeftY();
+        double strafe  =  player1.getLeftX();
+        double rotate  =  player1.getRightX();
         Pose2D currentPose = driveFieldRelative(forward, strafe, rotate);
 
-        // If x is pressed, reset IMU
-        if (currentGamepad1.square || currentGamepad2.square) {
+        // IMU Reset / Calibrate
+        if (player1.wasJustPressed(GamepadKeys.Button.SQUARE) || player2.wasJustPressed(GamepadKeys.Button.SQUARE)) {
             pinpoint.resetPosAndIMU();
         }
-        // If y is pressed, recalibrate IMU
-        if (currentGamepad1.triangle || currentGamepad2.triangle) {
+        if (player1.wasJustPressed(GamepadKeys.Button.TRIANGLE) || player2.wasJustPressed(GamepadKeys.Button.TRIANGLE)) {
             pinpoint.recalibrateIMU();
         }
-        // Circle button logic
-        boolean circleJustPressed = (currentGamepad1.circle && !previousGamepad1.circle) || (currentGamepad2.circle && !previousGamepad2.circle);
-        boolean circleReleased = (!currentGamepad1.circle && previousGamepad1.circle) || (!currentGamepad2.circle && previousGamepad2.circle);
+
+        // 3) Circle button => reset states
+        boolean circleJustPressed = player1.wasJustPressed(GamepadKeys.Button.CIRCLE) || player2.wasJustPressed(GamepadKeys.Button.CIRCLE);
         if (circleJustPressed) {
             endEffector.setIdlePosition();
             intakeState = -1;
@@ -137,65 +133,80 @@ public class Teleop extends OpMode {
             slides.setSlideTarget(0);
         }
 
+        boolean crossJustPressed = player1.wasJustPressed(GamepadKeys.Button.CROSS) || player2.wasJustPressed(GamepadKeys.Button.CROSS);
+        boolean crossJustReleased = player1.wasJustReleased(GamepadKeys.Button.CROSS) || player2.wasJustReleased(GamepadKeys.Button.CROSS);
 
-        //------------------------------------------
-        // 3) Rising Edge Detection for Bumpers/Triggers
-        //------------------------------------------
-        boolean leftBumperJustPressed =
-                (currentGamepad1.left_bumper && !previousGamepad1.left_bumper);
-        boolean rightBumperJustPressed =
-                (currentGamepad1.right_bumper && !previousGamepad1.right_bumper);
+        if (crossJustPressed) {
+            intakeState = -1;
+            depositState = -1;
+            slides.setPivotTarget(121);
+            slides.setSlideTarget(700);
+        }
 
-        boolean leftTriggerJustPressed =
-                (currentGamepad1.left_trigger > 0.5f) && (previousGamepad1.left_trigger <= 0.5f);
-        boolean rightTriggerJustPressed =
-                (currentGamepad1.right_trigger > 0.5f) && (previousGamepad1.right_trigger <= 0.5f);
+        if (crossJustReleased) {
+            intakeState = -1;
+            depositState = -1;
+            slides.setPivotTarget(121);
+            slides.setSlideTarget(50);
+        }
 
-        boolean shareJustPressed = (currentGamepad1.share && !previousGamepad1.share);
+
+
+        // 4) Rising edge detection for bumpers/triggers
+        boolean leftBumperJustPressed = player1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER);
+        boolean rightBumperJustPressed = player1.wasJustPressed(GamepadKeys.Button.RIGHT_BUMPER);
+
+
+
+
+        boolean leftTriggerJustPressed = leftTriggerReader.wasJustPressed();
+        boolean rightTriggerJustPressed = rightTriggerReader.wasJustPressed();
+
+        // Toggle override with share
+        boolean shareJustPressed = player1.wasJustPressed(GamepadKeys.Button.SHARE);
         if (shareJustPressed) {
             EndEffector.override = !EndEffector.override;
         }
 
-
-        //------------------------------------------
-        // 4) Spec Intake (left bumper +/ left trigger -)
-        //------------------------------------------
+        // 5) Spec Intake (left bumper + / left trigger -)
         if (leftBumperJustPressed) {
-            intakeState = (intakeState + 1) % 4; // cycle 0..3
+            if (specScoring) {
+                intakeState = (intakeState + 1) % 4;
+            } else {
+                intakeState = (intakeState + 1) % 6;
+            }
         }
         if (leftTriggerJustPressed) {
-            intakeState = (intakeState - 1) % 4; // cycle 0..3
+            if (specScoring) {
+                intakeState = (intakeState - 1) % 4;
+            } else {
+                intakeState = (intakeState - 1) % 6;
+            }
         }
 
-        //------------------------------------------
-        // 5) Spec Deposit (right bumper +/ right trigger -)
-        //------------------------------------------
+        // 6) Spec Deposit (right bumper + / right trigger -)
         if (rightBumperJustPressed) {
-            depositState = (depositState + 1) % 6; // cycle 0..4
+            depositState = (depositState + 1) % 6;
         }
         if (rightTriggerJustPressed) {
-            depositState = 0; // cycle 0..4
+            depositState = 0;
         }
 
-        // If both states are active, reset them (example logic — adjust to your liking)
+        // If both states are active, reset them
         if (intakeState != -1 && depositState != -1) {
             intakeState = -1;
             depositState = -1;
         }
 
-        //------------------------------------------
-        // 6) DPAD Controls for the Claw & Pivot/Wrist
-        //------------------------------------------
-        boolean dpadLeftJustPressed =
-                (currentGamepad1.dpad_left && !previousGamepad1.dpad_left);
-        boolean dpadRightJustPressed =
-                (currentGamepad1.dpad_right && !previousGamepad1.dpad_right);
-        boolean dpadUpJustPressed =
-                (currentGamepad1.dpad_up && !previousGamepad1.dpad_up);
-        boolean dpadDownJustPressed =
-                (currentGamepad1.dpad_down && !previousGamepad1.dpad_down);
+        // 7) DPAD Controls for Claw & Pivot/Wrist
+        boolean dpadLeftJustPressed = player1.wasJustPressed(GamepadKeys.Button.DPAD_LEFT);
+        boolean dpadRightJustPressed = player1.wasJustPressed(GamepadKeys.Button.DPAD_RIGHT);
 
-        // --- Claw Open/Close ---
+        boolean dpadUpJustPressed = player1.wasJustPressed(GamepadKeys.Button.DPAD_UP);
+        boolean dpadDownJustPressed = player1.wasJustPressed(GamepadKeys.Button.DPAD_DOWN);
+        boolean dpadUpDown = player1.isDown(GamepadKeys.Button.DPAD_UP);
+        boolean dpadDownDown = player1.isDown(GamepadKeys.Button.DPAD_DOWN);
+
         if (dpadLeftJustPressed) {
             endEffector.openClaw();
         }
@@ -203,90 +214,85 @@ public class Teleop extends OpMode {
             endEffector.closeClaw();
         }
 
-        // --- Pivot or Wrist Control ---
+        // Pivot or Wrist control depending on pivot angle
         if (slides.pivotTarget > 45) {
-            // Control pivot
-            if (currentGamepad1.dpad_up) {
+            if (dpadUpDown) {
                 endEffector.incrementPivotPosition(0.02);
             }
-            if (currentGamepad1.dpad_down) {
+            if (dpadDownDown) {
                 endEffector.decrementPivotPosition(0.02);
             }
         } else {
-            // Control wrist
-            if (currentGamepad1.dpad_up) {
-                endEffector.incrementWristPosition(0.02);
+            if (dpadUpJustPressed) {
+                endEffector.incrementWristPosition(0.1375);
             }
-            if (currentGamepad1.dpad_down) {
-                endEffector.decrementWristPosition(0.02);
+            if (dpadDownJustPressed) {
+                endEffector.decrementWristPosition(0.1375);
             }
         }
 
 
 
-        if (currentGamepad2.dpad_up) {
+        // More manual pivot/wrist control on gamepad2 (optional)
+        if (player2.isDown(GamepadKeys.Button.DPAD_UP)) {
             endEffector.incrementWristPosition(0.02);
         }
-        if (currentGamepad2.dpad_down) {
+        if (player2.isDown(GamepadKeys.Button.DPAD_DOWN)) {
             endEffector.decrementWristPosition(0.02);
         }
-        if (currentGamepad2.dpad_right) {
+        if (player2.isDown(GamepadKeys.Button.DPAD_RIGHT)) {
             endEffector.incrementPivotPosition(0.02);
         }
-        if (currentGamepad2.dpad_left) {
+        if (player2.isDown(GamepadKeys.Button.DPAD_LEFT)) {
             endEffector.decrementPivotPosition(0.02);
         }
 
-        //------------------------------------------
-        // 7) Intake State Machine
-        //------------------------------------------
+        // 8) Intake State Machine
         switch (intakeState) {
             case 0:
-                // pivot=0, slide=50, idle pos, open claw
+                // pivot=10, slide=0, idle pos, open claw
                 slides.setPivotTarget(10);
                 slides.setSlideTarget(0);
                 endEffector.setIdlePosition();
                 endEffector.openClaw();
-                specIntakeTimer.reset();
+                intakeTimer.reset();
                 phase = 0;
                 break;
 
             case 1:
-                // move lift to 400
+                // Lift to ~450
                 slides.setSlideTarget(450);
                 if (slides.liftPos > 380) {
-                    // OPENING CLAW COULD BE DANGEROUS HERE
                     endEffector.openClaw();
                     endEffector.setPreSubPickupPosition();
                 } else if (slides.slideTarget > 300) {
                     endEffector.setIdlePosition();
                     endEffector.openClaw();
                 }
-
-                specIntakeTimer.reset();
+                intakeTimer.reset();
                 phase = 0;
                 break;
 
             case 2:
-                // multi-phase logic
+                // Multi-phase logic
                 switch (phase) {
                     case 0: // subPickup
-                        if (specIntakeTimer.milliseconds() == 0) {
-                            specIntakeTimer.reset();
+                        if (intakeTimer.milliseconds() == 0) {
+                            intakeTimer.reset();
                         }
                         endEffector.setSubPickupPosition();
                         endEffector.closeClaw();
 
-                        if (specIntakeTimer.milliseconds() >= 150) {
+                        if (intakeTimer.milliseconds() >= 150) {
                             phase = 1;
-                            specIntakeTimer.reset();
+                            intakeTimer.reset();
                         }
                         break;
                     case 1: // deposit
                         endEffector.setSafeIdle();
                         slides.setPivotTarget(10);
                         slides.setSlideTarget(0);
-                        if (specIntakeTimer.milliseconds() >= 200) {
+                        if (intakeTimer.milliseconds() >= 200) {
                             if (!endEffector.pin0() && !endEffector.pin1()) {
                                 intakeState = 1;
                             }
@@ -297,50 +303,69 @@ public class Teleop extends OpMode {
 
             case 3:
                 slides.setPivotTarget(90);
-                endEffector.setObsDepositPosition();
-                specIntakeTimer.reset();
+                if (specScoring) {
+                    endEffector.setObsDepositPosition();
+                } else {
+                    endEffector.setSafeIdle();
+                }
+                intakeTimer.reset();
                 phase = 0;
                 break;
-
+            case 4:
+                slides.setPivotTarget(121);
+                slides.setSlideTarget(700);
+                intakeTimer.reset();
+                phase = 0;
+                break;
+            case 5:
+                endEffector.openClaw();
+                if (intakeTimer.milliseconds() > 300) {
+                    intakeState = (intakeState + 1) % 6;
+                }
+                phase = 0;
+                break;
             default:
-                specIntakeTimer.reset();
+                intakeTimer.reset();
                 phase = 0;
                 break;
         }
 
-        //------------------------------------------
-        // 8) Deposit State Machine
-        //------------------------------------------
+        // 9) Deposit State Machine
         switch (depositState) {
             case 0:
                 slides.setPivotTarget(90);
                 slides.setSlideTarget(0);
                 endEffector.setWallIntakePositionAlt();
                 endEffector.openClaw();
-                specDepoTimer.reset();
+                depositTimer.reset();
                 break;
+
             case 1:
+                // Extend or hold in some deposit logic if needed
                 break;
+
             case 2:
+                // Example: if pins are not pressed, revert
                 if (!endEffector.pin0() && !endEffector.pin1()) {
                     depositState = 0;
-                    specDepoTimer.reset();
+                    depositTimer.reset();
                     break;
                 }
                 endEffector.closeClaw();
-                if (specDepoTimer.milliseconds() > 300) {
+                if (depositTimer.milliseconds() > 300) {
                     depositState = 2;
-                    specDepoTimer.reset();
+                    depositTimer.reset();
                 }
                 break;
+
             case 3:
                 endEffector.setSpecScore();
-                specDepoTimer.reset();
+                depositTimer.reset();
                 break;
 
             case 4:
                 slides.setSlideTarget(475);
-                specDepoTimer.reset();
+                depositTimer.reset();
                 break;
 
             case 5:
@@ -348,22 +373,21 @@ public class Teleop extends OpMode {
                 if (slides.liftPos < 220) {
                     endEffector.openClaw();
                 }
-                if (specDepoTimer.milliseconds() > 250) {
+                if (depositTimer.milliseconds() > 250) {
                     depositState = 0;
-                    specDepoTimer.reset();
+                    depositTimer.reset();
                 }
                 break;
+
             default:
-                specDepoTimer.reset();
+                depositTimer.reset();
                 break;
         }
 
         // Update deposit mechanics
         slides.update();
 
-        //------------------------------------------
-        // 9) Telemetry
-        //------------------------------------------
+        // 10) Telemetry
         String data = String.format(Locale.US,
                 "{X: %.3f, Y: %.3f, H: %.3f}",
                 currentPose.getX(DistanceUnit.INCH),
@@ -373,25 +397,18 @@ public class Teleop extends OpMode {
         telemetry.addData("Position", data);
         telemetry.addData("Status", pinpoint.getDeviceStatus());
         telemetry.addData("Pinpoint Frequency", pinpoint.getFrequency());
-//        telemetry.addData("Intake State", intakeState);
-//        telemetry.addData("Deposit State", depositState);
-//        telemetry.addData("At set point", slides.slidesReached);
         telemetry.addData("Lift Pos", slides.liftPos);
         telemetry.addData("Lift Target", slides.slidePIDF.getSetPoint());
         telemetry.addData("Pivot Pos", slides.pivotPos);
         telemetry.addData("Pivot Target", slides.pivotTarget);
-
-//        telemetry.addData("Error", slides.slidePIDF.getPositionError());
-//        telemetry.addData("Pin0", endEffector.pin0());
-//        telemetry.addData("Pin1", endEffector.pin1());
         telemetry.update();
     }
 
-    // ------------------------------------------------
-    // HELPER: Configure the GoBilda Pinpoint device
-    // ------------------------------------------------
+    /**
+     * Configures the GoBilda Pinpoint device.
+     */
     private void configurePinpoint() {
-        pinpoint.setOffsets(6.03262717 * 25.4,2.71126772 * 25.4);
+        pinpoint.setOffsets(6.03262717 * 25.4, 2.71126772 * 25.4);
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,
@@ -400,32 +417,9 @@ public class Teleop extends OpMode {
         pinpoint.resetPosAndIMU();
     }
 
-    // ------------------------------------------------
-    // HELPER: Field-relative drive
-    // ------------------------------------------------
-//    private Pose2D driveFieldRelative(double forward, double right, double rotate) {
-//        pinpoint.update();
-//        Pose2D pos = pinpoint.getPosition();  // Current position
-//
-//        double robotAngle = Math.toRadians(pos.getHeading(AngleUnit.DEGREES));
-//        double theta = Math.atan2(forward, right);
-//        double r = Math.hypot(forward, right);
-//        theta = org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-//                .normalizeRadians(theta - robotAngle);
-//
-//        double newForward = r * Math.sin(theta);
-//        double newRight   = r * Math.cos(theta);
-//
-//        if (demo) {
-//
-//        }
-//
-//        drive.drive(newForward, newRight, rotate);
-//        return pos;
-//    }
-
-
-
+    /**
+     * Applies field-relative drive using the Pinpoint’s IMU heading.
+     */
     private Pose2D driveFieldRelative(double forward, double right, double rotate) {
         pinpoint.update();
         Pose2D pos = pinpoint.getPosition();  // Current position
@@ -437,27 +431,12 @@ public class Teleop extends OpMode {
         double r = Math.hypot(forward, right);
         theta = AngleUnit.normalizeRadians(theta - robotAngle);
 
-        // These are the "robot-centric" forward & strafe after field correction
+        // Convert to robot-centric forward & strafe
         double newForward = r * Math.sin(theta);
-        double newRight = r * Math.cos(theta);
+        double newRight   = r * Math.cos(theta);
 
-        double xPos = pos.getX(DistanceUnit.INCH);
-        double yPos = pos.getY(DistanceUnit.INCH);
-
-
-        if (demo) {
-
-        }
-
-        telemetry.addData("xPos", xPos);
-        telemetry.addData("yPos", yPos);
-        telemetry.addData("newForward", newForward);
-        telemetry.addData("newRight", newRight);
-        // Now drive with our final scaled inputs
+        // Drive with final inputs
         drive.drive(newForward, newRight, rotate);
-
         return pos;
     }
-
-
 }
