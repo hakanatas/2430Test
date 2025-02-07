@@ -118,7 +118,7 @@ public class fourSample extends OpMode {
                 break;
             case 1:
                 if (follower.getPose().getY() > score_y-11 /*&& follower.isBusy()*/) {
-                    deposit.setSlideTarget(1000);
+                    deposit.setSlideTarget(700);
                     if(deposit.slidesReached) {
                         endEffector.setBucketScorePosition();
                         setPathState();
@@ -166,7 +166,7 @@ public class fourSample extends OpMode {
                 break;
             case 5:
                 if (follower.getPose().getX() < sample_1_x-1 /*&& follower.isBusy()*/) {
-                    deposit.setSlideTarget(1000);
+                    deposit.setSlideTarget(700);
                     if(deposit.slidesReached) {
                         endEffector.setBucketScorePosition();
                         setPathState();
@@ -214,7 +214,7 @@ public class fourSample extends OpMode {
                 break;
             case 9:
                 if ((follower.isBusy() && follower.getPose().getX() < sample_1_x-2)) {
-                    deposit.setSlideTarget(1000);
+                    deposit.setSlideTarget(700);
                     if(deposit.slidesReached) {
                         endEffector.setBucketScorePosition();
                         setPathState();
@@ -265,7 +265,7 @@ public class fourSample extends OpMode {
                 break;
             case 13:
                 if (follower.getPose().getX() < sample_1_x-1 /*&& follower.isBusy()*/) {
-                    deposit.setSlideTarget(1000);
+                    deposit.setSlideTarget(700);
                     if(deposit.slidesReached) {
                         endEffector.setBucketScorePosition();
                         setPathState();
@@ -375,5 +375,9 @@ public class fourSample extends OpMode {
 //    private double calcY(double n) {
 //        return startY + n * yInc;
 //    }
+
+
+
+
 
 }
