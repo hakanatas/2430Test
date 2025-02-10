@@ -102,7 +102,7 @@ public class ModularFiveSpec extends OpMode {
 
     private void initializeSubsystems() {
         endEffector.setLight(0.5);
-        EndEffector.override = false;
+        endEffector.override = false;
         endEffector.init();
         deposit.setPivotTarget(90);
         deposit.setSlideTarget(50);

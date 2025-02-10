@@ -41,6 +41,7 @@ public class seperatedFiveSpec extends OpMode {
     private double yInc = 2;
     private double splineControl = 22;
 
+    private int slideScorePos = 400;
 
     /**
      * Build our complex path sequence using the same calls
@@ -111,19 +112,15 @@ public class seperatedFiveSpec extends OpMode {
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         score1 = follower.pathBuilder()
-                .addPath(new BezierCurve(
+                .addPath(new BezierLine(
                         new Point(new Pose(wall_intake, 30, Math.toRadians(0))),
-                        new Point(new Pose(subX, 30, Math.toRadians(0))),
-                        new Point(new Pose(splineControl, calcY(1), Math.toRadians(0))),
                         new Point(new Pose(subX, calcY(1), Math.toRadians(0)))))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         return1 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(subX, calcY(1), Point.CARTESIAN),
-                                new Point(splineControl, calcY(1), Point.CARTESIAN),
-                                new Point(subX, 30, Point.CARTESIAN),
                                 new Point(wall_intake + 10, 30, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -151,10 +148,8 @@ public class seperatedFiveSpec extends OpMode {
 
         score2 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(wall_intake + wall_offset, 30, Point.CARTESIAN),
-                                new Point(subX, 30, Point.CARTESIAN),
-                                new Point(splineControl, calcY(2), Point.CARTESIAN),
                                 new Point(subX, calcY(2), Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierLine(new Point(subX, 68, Point.CARTESIAN), new Point(subX, 68.5, Point.CARTESIAN)))
@@ -162,19 +157,16 @@ public class seperatedFiveSpec extends OpMode {
                 .build();
         return2 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(subX, calcY(2), Point.CARTESIAN),
-                                new Point(splineControl, calcY(2), Point.CARTESIAN),
-                                new Point(subX, 30, Point.CARTESIAN),
                                 new Point(wall_intake + 10, 30, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         score3 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(wall_intake + wall_offset, 30, Point.CARTESIAN),
-                                new Point(subX, 30, Point.CARTESIAN),
-                                new Point(splineControl, calcY(3), Point.CARTESIAN),
+
                                 new Point(subX, calcY(3), Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierLine(new Point(subX, 68, Point.CARTESIAN), new Point(subX, 68.5, Point.CARTESIAN)))
@@ -182,19 +174,17 @@ public class seperatedFiveSpec extends OpMode {
                 .build();
         return3 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(subX, calcY(3), Point.CARTESIAN),
-                                new Point(splineControl, calcY(3), Point.CARTESIAN),
-                                new Point(subX, 30, Point.CARTESIAN),
+
                                 new Point(wall_intake + 10, 30, Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
         score4 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
+                        new BezierLine(
                                 new Point(wall_intake + wall_offset, 30, Point.CARTESIAN),
-                                new Point(subX, 30, Point.CARTESIAN),
-                                new Point(splineControl, calcY(4), Point.CARTESIAN),
+
                                 new Point(subX, calcY(4), Point.CARTESIAN)))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .addPath(new BezierLine(new Point(subX, 68, Point.CARTESIAN), new Point(subX, 68.5, Point.CARTESIAN)))
@@ -215,22 +205,16 @@ public class seperatedFiveSpec extends OpMode {
                 break;
             case 1:
                 if (follower.getPose().getX() > 10 && follower.isBusy()) {
-                    deposit.setSlideTarget(490);
+                    deposit.setSlideTarget(slideScorePos);
                 }
 
                 if (!follower.isBusy() && follower.getPose().getX() >= 19 && follower.getVelocityMagnitude() < 0.5) {
-                    deposit.setSlideTarget(230);
-                    if (deposit.liftPos < 250) {
-                        endEffector.openClaw();
-                        setPathState();
-                    }
+                    endEffector.openClaw();
                 }
                 break;
             case 2:
                 if (!follower.isBusy() || deposit.slidesReached) {
-                    endEffector.openClaw();
                     deposit.setSlideTarget(0);
-                    deposit.setPivotTarget(90);
                     endEffector.setWallIntakePositionAlt();
                     follower.followPath(combinedPush, 1,false);
                     setPathState(4);
@@ -245,42 +229,27 @@ public class seperatedFiveSpec extends OpMode {
             case 4:
                 if ((!follower.isBusy() || follower.getPose().getX() < 8) && follower.getVelocityMagnitude() < 0.5 && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
                     endEffector.closeClaw();
-                    deposit.setSlideTarget(215);
+                    endEffector.setSpecScore();
                     setPathState();
                 }
                 break;
             case 5:
                 if ((!follower.isBusy() || follower.getPose().getX() < 8) && follower.getVelocityMagnitude() < 0.5 && pathTimer.getElapsedTimeSeconds() > 0.5 && deposit.slidesReached) {
-                    endEffector.closeClaw();
                     follower.followPath(score1, false);
                     setPathState();
                 }
                 break;
             case 6:
-                if (follower.getPose().getX() > 15 && follower.isBusy()) {
-                    deposit.setSlideTarget(120);
-                    endEffector.setSpecScore(); // Adjust claw for scoring
-                    // Set initial slide position
-                }
-
                 if (follower.getPose().getY() > 40 && follower.isBusy()) {
-                    deposit.setSlideTarget(460);
+                    deposit.setSlideTarget(slideScorePos);
                 }
-
-
                 if (follower.getPose().getX() >= 19 && !follower.isBusy() && follower.getVelocityMagnitude() < 0.5) {
-                    deposit.setSlideTarget(230);
-                    if (deposit.liftPos < 250) {
-                        endEffector.openClaw();
-                        setPathState();
-                    }
+                    endEffector.openClaw();
                 }
                 break;
             case 7:
                 if(!follower.isBusy() || deposit.slidesReached) {
-                    endEffector.openClaw();
                     deposit.setSlideTarget(0);
-                    deposit.setPivotTarget(90);
                     endEffector.setWallIntakePositionAlt();
                     follower.followPath(return1,1, false);
                     setPathState();
@@ -338,7 +307,7 @@ public class seperatedFiveSpec extends OpMode {
                 if(!follower.isBusy() || deposit.slidesReached) {
                     endEffector.openClaw();
                     deposit.setSlideTarget(0);
-                    deposit.setPivotTarget(90);
+                    deposit.setPivotTarget(121);
                     endEffector.setWallIntakePositionAlt();
                     follower.followPath(return2,1, false);
                     setPathState();
@@ -391,7 +360,7 @@ public class seperatedFiveSpec extends OpMode {
                 if(!follower.isBusy() || deposit.slidesReached) {
                     endEffector.openClaw();
                     deposit.setSlideTarget(0);
-                    deposit.setPivotTarget(90);
+                    deposit.setPivotTarget(121);
                     endEffector.setWallIntakePositionAlt();
                     follower.followPath(return3,1, false);
                     setPathState();
@@ -511,10 +480,10 @@ public class seperatedFiveSpec extends OpMode {
         deposit = new Deposit(hardwareMap, telemetry, true);
         endEffector = new EndEffector(hardwareMap);
         endEffector.setLight(0.5);
-        EndEffector.override = false;
+        endEffector.override = false;
 
         endEffector.init();
-        deposit.setPivotTarget(90);
+        deposit.setPivotTarget(121);
         deposit.setSlideTarget(50);
 
         // Build our newly incorporated multi-step path:

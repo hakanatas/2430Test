@@ -352,7 +352,7 @@ public class fourSample extends OpMode {
         deposit = new Deposit(hardwareMap, telemetry, true);
         endEffector = new EndEffector(hardwareMap);
         endEffector.setLight(0.5);
-        EndEffector.override = false;
+        endEffector.override = false;
 
         endEffector.init();
         deposit.setPivotTarget(90);

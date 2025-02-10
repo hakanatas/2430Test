@@ -1,25 +1,27 @@
 package org.firstinspires.ftc.teamcode.config.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
+/**
+ * The EndEffector class manages all of the servo components on the end effector.
+ * It provides preset methods such as openClaw, closeClaw, setSubPickupPosition, etc.
+ * Note that users of this class never directly control individual servo positions.
+ */
 @Config
 public class EndEffector {
 
-    // Public static variables for FTC Dashboard
-    public static double armPosition = 0;
-    public static double pivotPosition = 0;
-    public static double wristPosition = 0.45;
-    public static double clawPosition = 0;
+    // Configurable positions (visible on FTC Dashboard)
+    public double armPosition = 0.5;    // must be within [0.2, 0.65]
+    public double pivotPosition = 0.1;  // pivot allowed full range [0, 1]
+    public double wristPosition = 0.45; // must be within [0.38, 0.7]
+    public double clawPosition = 0.13;  // must be within [0.59, 0.74]
+    public double lightPosition = 0.0;
 
-    public static double lightPosition = 0;
-
-    // Private Servo instances
+    // Servo hardware references
     private final Servo armServoLeft;
     private final Servo armServoRight;
     private final Servo pivotServo;
@@ -27,191 +29,95 @@ public class EndEffector {
     private final Servo clawServo;
     private final Servo light;
 
-    public static boolean override = false;
+    // Digital channels (if used)
+    private final DigitalChannel pin0;
+    private final DigitalChannel pin1;
 
+    // Override flag for sensor-based methodsf
+    public boolean override = false;
+
+    // Stores the most recent states of the digital channels
     public boolean pin0State;
     public boolean pin1State;
-    DigitalChannel pin0;
-    DigitalChannel pin1;
 
-
-
-    // Constructor
+    /**
+     * Constructs the EndEffector subsystem using the provided hardware map.
+     *
+     * @param hardwareMap The hardware map from the op mode.
+     */
     public EndEffector(HardwareMap hardwareMap) {
-        armServoLeft = hardwareMap.get(Servo.class, "armServoL");
+        // Map servos
+        armServoLeft  = hardwareMap.get(Servo.class, "armServoL");
         armServoRight = hardwareMap.get(Servo.class, "armServoR");
-        pivotServo = hardwareMap.get(Servo.class, "pivotServo");
-        wristServo = hardwareMap.get(Servo.class, "wristServo");
-        clawServo = hardwareMap.get(Servo.class, "clawServo");
-        light = hardwareMap.get(Servo.class, "light");
-        armServoRight.setDirection(Servo.Direction.REVERSE);
+        pivotServo    = hardwareMap.get(Servo.class, "pivotServo");
+        wristServo    = hardwareMap.get(Servo.class, "wristServo");
+        clawServo     = hardwareMap.get(Servo.class, "clawServo");
+        light         = hardwareMap.get(Servo.class, "light");
+
+        // Configure servo directions (ensure left/right are oppositely oriented)
         armServoLeft.setDirection(Servo.Direction.FORWARD);
+        armServoRight.setDirection(Servo.Direction.REVERSE);
+
+        // Map digital channels
         pin0 = hardwareMap.digitalChannel.get("digital0");
         pin1 = hardwareMap.digitalChannel.get("digital1");
-
-
     }
 
-    // Public setters
+    // --- Setters with Clipping ---
+
+    /**
+     * Sets both arm servos to a specified position.
+     * The position is clipped to the range [0.2, 0.65].
+     *
+     * @param position The desired arm position.
+     */
     public void setArmPosition(double position) {
-        if (armPosition != position) {
-            armServoLeft.setPosition(position);
-            armServoRight.setPosition(position);
-            armPosition = position;
-        }
+        position = Range.clip(position, 0, 1);
+        armServoLeft.setPosition(position);
+        armServoRight.setPosition(position);
+        armPosition = position;
     }
 
+    /**
+     * Sets the pivot servo to a specified position.
+     *
+     * @param position The desired pivot position.
+     */
     public void setPivotPosition(double position) {
-        if (pivotPosition != position) {
-            pivotServo.setPosition(position);
-            pivotPosition = position;
-        }
+        position = Range.clip(position, 0.24, 0.78);
+        pivotServo.setPosition(position);
+        pivotPosition = position;
     }
 
+    /**
+     * Sets the wrist servo to a specified position.
+     * The position is clipped to the range [0.38, 0.7].
+     *
+     * @param position The desired wrist position.
+     */
     public void setWristPosition(double position) {
-        if (wristPosition != position) {
-            position = Range.clip(position, 0.45, 1.0);
-            wristServo.setPosition(position);
-            wristPosition = position;
-        }
+        position = Range.clip(position, 0, 1);
+        wristServo.setPosition(position);
+        wristPosition = position;
     }
 
+    /**
+     * Sets the claw servo to a specified position.
+     * The position is clipped to the range [0.59, 0.74].
+     *
+     * @param position The desired claw position.
+     */
     public void setClawPosition(double position) {
-        if (clawPosition != position) {
-            clawServo.setPosition(position);
-            clawPosition = position;
-        }
+        position = Range.clip(position, 0.13, 0.85);
+        clawServo.setPosition(position);
+        clawPosition = position;
     }
 
-    // Public getters
-    public double getArmPosition() {
-        return armServoLeft.getPosition();
-    }
-
-    public double getPivotPosition() {
-        return pivotServo.getPosition();
-    }
-
-    public double getWristPosition() {
-        return wristServo.getPosition();
-    }
-
-    public double getClawPosition() {
-        return clawServo.getPosition();
-    }
-
-    // Utility methods for preset positions
-    public void setIdlePosition() {
-        setPositions(0.53, 0.375, 0.45, 0.375);
-    }
-
-    public void init() {
-        armServoLeft.setPosition(0.45);
-        armServoRight.setPosition(0.45);
-        pivotServo.setPosition(0.1);
-        wristServo.setPosition(0.45);
-        clawServo.setPosition(0.14);
-    }
-
-//    public void init() {
-//        armServoLeft.setPosition(0.53);
-//        armServoRight.setPosition(0.53);
-//        pivotServo.setPosition(0.375);
-//        wristServo.setPosition(0.45);
-//        clawServo.setPosition(0.14);
-//
-//    }
-    public void setIdleAutoPosition() {
-        setPositions(0.53, 0.375, 0.45, 0.14);
-    }
-    public void setSafeIdle() {setPositions(0.16, 0.2, 0.45, clawPosition);}
-
-    public void setBucketScorePosition() {
-        setPositions(0.16, 0.2+0.29-0.22, pivotPosition, clawPosition);
-    }
-
-    public void setPreSubPickupPosition() {
-        setPositions(0.59, 0.58, wristPosition, clawPosition);
-    }
-
-    public void setSubPickupPosition() {
-        setPositions(0.7, 0.52, wristPosition, clawPosition);
-    }
-
-    public void setObsDepositPosition() {
-        setPositions(0.12, 0.1+0.29-0.22, 0.45, clawPosition);
-    }
-
-    public void setWallIntakePosition() {
-        setPositions(0.62, 0.375, 1, 0.375);
-    }
-
-    public void setWallIntakePositionAlt() {setPositions(0.90, 0.375, 1, 0.375);}
-
-    public void setSpecScore() {
-        setPositions(0.45, 0.08, 0.45, 0.14);
-    }
-
-    public void openClaw() {
-        setClawPosition(0.375);
-    }
-
-    public void closeClaw() {
-        setClawPosition(0.14);
-    }
-
-    // Incremental adjustments
-    public void incrementWristPosition(double step) {
-        // setWristPosition(Range.clip(wristPosition + step, 0.45, 1.0));
-        setWristPosition(wrap(wristPosition + step, 0.45, 1.0));
-    }
-
-    public void decrementWristPosition(double step) {
-        // setWristPosition(Range.clip(wristPosition - step, 0.45, 1.0));
-        setWristPosition(wrap(wristPosition - step, 0.45, 1.0));
-    }
-
-    public void incrementPivotPosition(double step) {
-        setPivotPosition(Range.clip(pivotPosition + step, 0.0, 1.0));
-    }
-
-    public void decrementPivotPosition(double step) {
-        setPivotPosition(Range.clip(pivotPosition - step, 0.0, 1.0));
-    }
-
-    // Unified setters for multiple positions
-    public void setPositions(double armPos, double pivotPos, double wristPos, double clawPos) {
-        setArmPosition(armPos);
-        setPivotPosition(pivotPos);
-        setWristPosition(wristPos);
-        setClawPosition(clawPos);
-    }
-
-    public void setPositions(double armPos, double pivotPos, double wristPos) {
-        setArmPosition(armPos);
-        setPivotPosition(pivotPos);
-        setWristPosition(wristPos);
-    }
-
-    public boolean pin0() {
-        pin0State = pin0.getState();
-        pin1State = pin1.getState();
-        return override || pin0State;
-    }
-
-    public boolean pin1() {
-        pin0State = pin0.getState();
-        pin1State = pin1.getState();
-        return override || pin1State;
-    }
-
-    public boolean either() {
-        pin0State = pin0.getState();
-        pin1State = pin1.getState();
-        // return pin1State || pin0State;
-        return true;
-    }
-
+    /**
+     * Sets the light servo to a specified position.
+     *
+     * @param position The desired light position.
+     */
     public void setLight(double position) {
         if (lightPosition != position) {
             lightPosition = position;
@@ -219,11 +125,245 @@ public class EndEffector {
         }
     }
 
+    // --- Getters for Servo Positions ---
+
+    /**
+     * Gets the current arm position (assumes both arm servos are identical).
+     *
+     * @return The arm servo position.
+     */
+    public double getArmPosition() {
+        return armServoLeft.getPosition();
+    }
+
+    /**
+     * Gets the current pivot position.
+     *
+     * @return The pivot servo position.
+     */
+    public double getPivotPosition() {
+        return pivotServo.getPosition();
+    }
+
+    /**
+     * Gets the current wrist position.
+     *
+     * @return The wrist servo position.
+     */
+    public double getWristPosition() {
+        return wristServo.getPosition();
+    }
+
+    /**
+     * Gets the current claw position.
+     *
+     * @return The claw servo position.
+     */
+    public double getClawPosition() {
+        return clawServo.getPosition();
+    }
+
+    // --- Preset Position Methods ---
+
+    /**
+     * Initializes the end effector to a default starting state.
+     */
+    public void init() {
+        setIdlePosition();
+    }
+
+    /**
+     * Sets the end effector to an idle position.
+     */
+    public void setIdlePosition() {
+        setPositions(0.5, 0.5, 0.5, clawPosition);
+    }
+
+    /**
+     * Sets the end effector to a safe idle position.
+     */
+    public void setSafeIdle() {
+        setPositions(0.35, 0.5, 0.5, clawPosition);
+    }
+
+    public void setBucketSafeIdle() {
+        setPositions(0.65, 0.65, 1, clawPosition);
+    }
+
+    /**
+     * Sets the end effector to the bucket scoring position.
+     */
+//    public void setBucketScorePosition() {
+//        setPositions(0.6, 0.45, 0.5, clawPosition);
+//    }
+
+    public void setBucketScorePosition() {
+        setPositions(0.53, 0.4, 1, clawPosition);
+    }
+
+    /**
+     * Sets the end effector to the pre-sub pickup position.
+     */
+    public void setPreSubPickupPosition() {
+        setPositions(0.57, 0.76, wristPosition, clawPosition);
+    }
+
+    /**
+     * Sets the end effector to the sub pickup position.
+     */
+    public void setSubPickupPosition() {
+        setPositions(0.61, 0.71, wristPosition, clawPosition);
+    }
+
+    /**
+     * Sets the end effector to the obstacle deposit position.
+     */
+    public void setObsDepositPosition() {
+        setPositions(0.25, 0.43, 0, clawPosition);
+    }
+
+    /**
+     * Sets the end effector to an alternate wall intake position.
+     */
+    public void setWallIntakePositionAlt() {
+        setPositions(1, 0.54, 0, 0.85);
+    }
+
+    /**
+     * Sets the end effector to a special scoring position.
+     */
+    public void setSpecScore() {
+        setPositions(0.27, 0.63, 1, 0.13);
+    }
+
+    /**
+     * Opens the claw.
+     */
+    public void openClaw() {
+        setClawPosition(0.85);
+    }
+
+    /**
+     * Closes the claw.
+     */
+    public void closeClaw() {
+        setClawPosition(0.13);
+    }
+
+    /**
+     * Sets the positions of all servos at once.
+     *
+     * @param armPos   Position for the arm servos.
+     * @param pivotPos Position for the pivot servo.
+     * @param wristPos Position for the wrist servo.
+     * @param clawPos  Position for the claw servo.
+     */
+    public void setPositions(double armPos, double pivotPos, double wristPos, double clawPos) {
+        setArmPosition(armPos);
+        setPivotPosition(pivotPos);
+        setWristPosition(wristPos);
+        setClawPosition(clawPos);
+    }
+
+    /**
+     * Sets the positions of the arm, pivot, and wrist servos.
+     *
+     * @param armPos   Position for the arm servos.
+     * @param pivotPos Position for the pivot servo.
+     * @param wristPos Position for the wrist servo.
+     */
+    public void setPositions(double armPos, double pivotPos, double wristPos) {
+        setArmPosition(armPos);
+        setPivotPosition(pivotPos);
+        setWristPosition(wristPos);
+    }
+
+    // --- Digital Channel Methods ---
+
+    /**
+     * Returns the state of digital pin0, accounting for the override.
+     *
+     * @return True if override is enabled or if pin0 is active.
+     */
+    public boolean pin0() {
+        pin0State = pin0.getState();
+        pin1State = pin1.getState();
+        return override || pin0State;
+    }
+
+    /**
+     * Returns the state of digital pin1, accounting for the override.
+     *
+     * @return True if override is enabled or if pin1 is active.
+     */
+    public boolean pin1() {
+        pin0State = pin0.getState();
+        pin1State = pin1.getState();
+        return override || pin1State;
+    }
+
+    /**
+     * Checks if either digital channel is active.
+     *
+     * @return True if override is enabled or if either pin is active.
+     */
+    public boolean either() {
+        pin0State = pin0.getState();
+        pin1State = pin1.getState();
+        return override || pin0State || pin1State;
+    }
+
+    // --- Incremental Adjustment Methods (if needed) ---
+
+    /**
+     * Increments the wrist position by a specified step.
+     * The new value is wrapped within the range [0.45, 1.0].
+     *
+     * @param step The amount to increment.
+     */
+    public void incrementWristPosition(double step) {
+        setWristPosition(wrap(wristPosition + step, 0.5, 1.0));
+    }
+
+    /**
+     * Decrements the wrist position by a specified step.
+     * The new value is wrapped within the range [0.45, 1.0].
+     *
+     * @param step The amount to decrement.
+     */
+    public void decrementWristPosition(double step) {
+        setWristPosition(wrap(wristPosition - step, 0, 1.0));
+    }
+
+    /**
+     * Increments the pivot position by a specified step.
+     *
+     * @param step The amount to increment.
+     */
+    public void incrementPivotPosition(double step) {
+        setPivotPosition(Range.clip(pivotPosition + step, 0.0, 1.0));
+    }
+
+    /**
+     * Decrements the pivot position by a specified step.
+     *
+     * @param step The amount to decrement.
+     */
+    public void decrementPivotPosition(double step) {
+        setPivotPosition(Range.clip(pivotPosition - step, 0.0, 1.0));
+    }
+
+    /**
+     * Wraps a given value to remain within a specified range.
+     *
+     * @param value The value to wrap.
+     * @param min   The minimum bound.
+     * @param max   The maximum bound.
+     * @return The wrapped value.
+     */
     public static double wrap(double value, double min, double max) {
         double range = max - min;
-        // Bring the value into a zero-based range
         double wrappedValue = (value - min) % range;
-        // Handle negative values correctly
         if (wrappedValue < 0) {
             wrappedValue += range;
         }

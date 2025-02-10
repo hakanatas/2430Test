@@ -79,13 +79,13 @@ public class Deposit {
 
 
         slidePIDF.setTolerance(15);
-        pivotPIDF.setTolerance(2);
+        pivotPIDF.setTolerance(1);
         setSlideTarget(Math.round((float) rightLift.getCurrentPosition() / 42) * -1);
         setPivotTarget(pivotPos());
     }
 
     public void setSlideTarget(double target) {
-        this.slideTarget = Range.clip(target, 0, 1100);
+        this.slideTarget = Range.clip(target, 0, 1250);
         slidePIDF.setSetPoint(slideTarget);
     }
 
@@ -104,7 +104,7 @@ public class Deposit {
         slidesReached = slidePIDF.atSetPoint() || (liftPos >= slideTarget && slideTarget == 1050);
         slidesRetracted = slideTarget <= 0 && slideLimit.isPressed();
 
-        pivotPIDF.setF(pivotF * Math.cos(Math.toRadians(pivotPos)) * ((double) liftPos / 1100));
+        pivotPIDF.setF(pivotF * Math.cos(Math.toRadians(pivotPos)) * ((double) liftPos / 1250));
         double pivotPower = pivotPIDF.calculate(pivotPos, pivotTarget);
         pivotReached = slidePIDF.atSetPoint();
 
@@ -134,13 +134,15 @@ public class Deposit {
                 slidePIDF.reset();
                 pidfActive = true;
             } else {
-                rightLift.setPower(-0.6);
-                leftLift.setPower(-0.6);
+                rightLift.setPower(-0.7);
+                leftLift.setPower(-0.7);
             }
         }
 
 
-
+        if (slideTarget < 500 && pivotTarget == 121 && pivotReached) {
+            pivotPower = 0;
+        }
         pivot.setPower(pivotPower);
     }
 
@@ -149,7 +151,9 @@ public class Deposit {
     }
 
     public int pivotPos() {
-        int pos = (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360)) % 360 - 168;
+        // int pos = (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360)) % 360 - 168;
+        int pos = (int) (Math.round(pivotEncoder.getVoltage() / 3.2 * 360)) % 360 - 171;
+
         if (pos >= 360) {
             pos -= 360;
         } else if (pos < 0) {

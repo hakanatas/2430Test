@@ -4,6 +4,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.seattlesolvers.solverslib.gamepad.TriggerReader;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -31,16 +32,12 @@ public class Teleop extends OpMode {
     private GoBildaPinpointDriver pinpoint;
 
     // Gamepad snapshots
-    private GamepadEx player1 = new GamepadEx(gamepad1);
-    private GamepadEx player2 = new GamepadEx(gamepad2);
+    private GamepadEx player1;
+    private GamepadEx player2;
 
-    TriggerReader rightTriggerReader = new TriggerReader(
-            player1, GamepadKeys.Trigger.RIGHT_TRIGGER
-    );
+    TriggerReader rightTriggerReader;
 
-    TriggerReader leftTriggerReader = new TriggerReader(
-            player1, GamepadKeys.Trigger.LEFT_TRIGGER
-    );
+    TriggerReader leftTriggerReader;
 
     // State machine variables
     private int intakeState = -1;
@@ -60,6 +57,14 @@ public class Teleop extends OpMode {
 
     @Override
     public void init() {
+        player1 = new GamepadEx(gamepad1);
+        player2 = new GamepadEx(gamepad2);
+        rightTriggerReader  = new TriggerReader(
+                player1, GamepadKeys.Trigger.RIGHT_TRIGGER
+        );
+        leftTriggerReader = new TriggerReader(
+                player1, GamepadKeys.Trigger.LEFT_TRIGGER
+        );
         // Set up bulk caching
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
@@ -72,7 +77,7 @@ public class Teleop extends OpMode {
         endEffector = new EndEffector(hardwareMap);
 
         endEffector.setLight(0.5);
-        EndEffector.override = true;
+        endEffector.override = true;
         drive.init(hardwareMap);
 
         // Pinpoint driver initialization
@@ -89,13 +94,15 @@ public class Teleop extends OpMode {
 
     @Override
     public void loop() {
+        player1.readButtons();
+        player2.readButtons();
         // Handle Spec / Samp Deposit
         if (player1.getButton(GamepadKeys.Button.TOUCHPAD_FINGER_1) && player1.getButton(GamepadKeys.Button.TOUCHPAD_FINGER_2)) {
             specScoring = !specScoring;
         }
 
         // Handle LED override logic
-        if (EndEffector.override) {
+        if (endEffector.override) {
             endEffector.setLight(0);
         } else if (endEffector.pin0() && endEffector.pin1()) {
             endEffector.setLight(0.388);
@@ -109,7 +116,7 @@ public class Teleop extends OpMode {
 
 
         // 2) Field-relative drive / IMU Controls
-        double forward = -player1.getLeftY();
+        double forward = player1.getLeftY();
         double strafe  =  player1.getLeftX();
         double rotate  =  player1.getRightX();
         Pose2D currentPose = driveFieldRelative(forward, strafe, rotate);
@@ -165,7 +172,7 @@ public class Teleop extends OpMode {
         // Toggle override with share
         boolean shareJustPressed = player1.wasJustPressed(GamepadKeys.Button.SHARE);
         if (shareJustPressed) {
-            EndEffector.override = !EndEffector.override;
+            endEffector.override = !endEffector.override;
         }
 
         // 5) Spec Intake (left bumper + / left trigger -)
@@ -173,23 +180,23 @@ public class Teleop extends OpMode {
             if (specScoring) {
                 intakeState = (intakeState + 1) % 4;
             } else {
-                intakeState = (intakeState + 1) % 6;
+                intakeState = (intakeState + 1) % 7;
             }
         }
         if (leftTriggerJustPressed) {
             if (specScoring) {
                 intakeState = (intakeState - 1) % 4;
             } else {
-                intakeState = (intakeState - 1) % 6;
+                intakeState = (intakeState - 1) % 7;
             }
         }
 
         // 6) Spec Deposit (right bumper + / right trigger -)
         if (rightBumperJustPressed) {
-            depositState = (depositState + 1) % 6;
+            depositState = (depositState + 1) % 5;
         }
         if (rightTriggerJustPressed) {
-            depositState = 0;
+            depositState = (depositState - 1) % 5;
         }
 
         // If both states are active, reset them
@@ -224,10 +231,10 @@ public class Teleop extends OpMode {
             }
         } else {
             if (dpadUpJustPressed) {
-                endEffector.incrementWristPosition(0.1375);
+                endEffector.incrementWristPosition(0.25);
             }
             if (dpadDownJustPressed) {
-                endEffector.decrementWristPosition(0.1375);
+                endEffector.decrementWristPosition(0.25);
             }
         }
 
@@ -251,7 +258,7 @@ public class Teleop extends OpMode {
         switch (intakeState) {
             case 0:
                 // pivot=10, slide=0, idle pos, open claw
-                slides.setPivotTarget(10);
+                slides.setPivotTarget(12);
                 slides.setSlideTarget(0);
                 endEffector.setIdlePosition();
                 endEffector.openClaw();
@@ -290,7 +297,7 @@ public class Teleop extends OpMode {
                         break;
                     case 1: // deposit
                         endEffector.setSafeIdle();
-                        slides.setPivotTarget(10);
+                        slides.setPivotTarget(12);
                         slides.setSlideTarget(0);
                         if (intakeTimer.milliseconds() >= 200) {
                             if (!endEffector.pin0() && !endEffector.pin1()) {
@@ -302,28 +309,45 @@ public class Teleop extends OpMode {
                 break;
 
             case 3:
-                slides.setPivotTarget(90);
+
                 if (specScoring) {
+                    slides.setPivotTarget(90);
                     endEffector.setObsDepositPosition();
                 } else {
-                    endEffector.setSafeIdle();
+                    slides.setPivotTarget(95);
+                    endEffector.setBucketScorePosition();
                 }
                 intakeTimer.reset();
                 phase = 0;
                 break;
             case 4:
-                slides.setPivotTarget(121);
-                slides.setSlideTarget(700);
+                slides.setPivotTarget(95);
+                slides.setSlideTarget(1115);
                 intakeTimer.reset();
                 phase = 0;
                 break;
             case 5:
                 endEffector.openClaw();
                 if (intakeTimer.milliseconds() > 300) {
-                    intakeState = (intakeState + 1) % 6;
+                    endEffector.setBucketSafeIdle();
+                }
+
+                if (intakeTimer.milliseconds() > 400) {
+                    slides.setSlideTarget(0);
+                    intakeState = (intakeState + 1) % 7;
+                    intakeTimer.reset();
+                }
+
+                phase = 0;
+                break;
+            case 6:
+                intakeTimer.reset();
+                if (slides.slidesReached) {
+                    intakeState = (intakeState + 1) % 7;
                 }
                 phase = 0;
                 break;
+
             default:
                 intakeTimer.reset();
                 phase = 0;
@@ -333,7 +357,7 @@ public class Teleop extends OpMode {
         // 9) Deposit State Machine
         switch (depositState) {
             case 0:
-                slides.setPivotTarget(90);
+                slides.setPivotTarget(121);
                 slides.setSlideTarget(0);
                 endEffector.setWallIntakePositionAlt();
                 endEffector.openClaw();
@@ -341,11 +365,6 @@ public class Teleop extends OpMode {
                 break;
 
             case 1:
-                // Extend or hold in some deposit logic if needed
-                break;
-
-            case 2:
-                // Example: if pins are not pressed, revert
                 if (!endEffector.pin0() && !endEffector.pin1()) {
                     depositState = 0;
                     depositTimer.reset();
@@ -355,30 +374,20 @@ public class Teleop extends OpMode {
                 if (depositTimer.milliseconds() > 300) {
                     depositState = 2;
                     depositTimer.reset();
-                }
-                break;
+                }                break;
 
-            case 3:
+            case 2:
                 endEffector.setSpecScore();
                 depositTimer.reset();
                 break;
 
-            case 4:
-                slides.setSlideTarget(475);
+            case 3:
+                slides.setSlideTarget(450);
                 depositTimer.reset();
                 break;
-
-            case 5:
-                slides.setSlideTarget(210);
-                if (slides.liftPos < 220) {
-                    endEffector.openClaw();
-                }
-                if (depositTimer.milliseconds() > 250) {
-                    depositState = 0;
-                    depositTimer.reset();
-                }
+            case 4:
+                endEffector.openClaw();
                 break;
-
             default:
                 depositTimer.reset();
                 break;
@@ -401,6 +410,7 @@ public class Teleop extends OpMode {
         telemetry.addData("Lift Target", slides.slidePIDF.getSetPoint());
         telemetry.addData("Pivot Pos", slides.pivotPos);
         telemetry.addData("Pivot Target", slides.pivotTarget);
+        telemetry.addData("specScoring", specScoring);
         telemetry.update();
     }
 
