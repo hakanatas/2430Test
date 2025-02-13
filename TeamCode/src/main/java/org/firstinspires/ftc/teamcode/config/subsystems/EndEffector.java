@@ -33,7 +33,7 @@ public class EndEffector {
     private final DigitalChannel pin0;
     private final DigitalChannel pin1;
 
-    // Override flag for sensor-based methodsf
+    // Override flag for sensor-based methods
     public boolean override = false;
 
     // Stores the most recent states of the digital channels
@@ -179,11 +179,15 @@ public class EndEffector {
         setPositions(0.5, 0.5, 0.5, clawPosition);
     }
 
+    public void setAutoIdle() {
+        setPositions(0.5, 0.5, 1, clawPosition);
+    }
+
     /**
      * Sets the end effector to a safe idle position.
      */
     public void setSafeIdle() {
-        setPositions(0.35, 0.5, 0.5, clawPosition);
+        setPositions(0.45, 0.5, 0.5, clawPosition);
     }
 
     public void setBucketSafeIdle() {
@@ -205,14 +209,15 @@ public class EndEffector {
      * Sets the end effector to the pre-sub pickup position.
      */
     public void setPreSubPickupPosition() {
-        setPositions(0.57, 0.76, wristPosition, clawPosition);
+        // was 0.67 & 0.67
+        setPositions(0.65, 0.68, wristPosition, clawPosition);
     }
 
     /**
      * Sets the end effector to the sub pickup position.
      */
     public void setSubPickupPosition() {
-        setPositions(0.61, 0.71, wristPosition, clawPosition);
+        setPositions(0.71, 0.67, wristPosition, clawPosition);
     }
 
     /**
@@ -322,7 +327,7 @@ public class EndEffector {
      * @param step The amount to increment.
      */
     public void incrementWristPosition(double step) {
-        setWristPosition(wrap(wristPosition + step, 0.5, 1.0));
+        setWristPosition(wrap(wristPosition + step, 0, 1.0));
     }
 
     /**

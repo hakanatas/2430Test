@@ -25,7 +25,7 @@ public class Deposit {
     private static final double[] teleopPivotCoefficients = {0.032,0,0.001, 0.0025};
 
 
-    private static final double[] autoSlideCoefficients = {0.08,0,0.0016, 0};
+    private static final double[] autoSlideCoefficients = {0.06,0,0.0016, 0};
     private static final double[] teleopSlideCoefficients = {0.04,0,0.0016, 0};
 
     //    private static final double[] teleopSlideCoefficients = {0.0125,0,0.0002, 0.0025};
@@ -106,7 +106,7 @@ public class Deposit {
 
         pivotPIDF.setF(pivotF * Math.cos(Math.toRadians(pivotPos)) * ((double) liftPos / 1250));
         double pivotPower = pivotPIDF.calculate(pivotPos, pivotTarget);
-        pivotReached = slidePIDF.atSetPoint();
+        pivotReached = pivotPIDF.atSetPoint();
 
         // Just make sure it gets to fully retracted if target is 0
         if (slideTarget == 0 && !slidesReached) {
@@ -121,7 +121,7 @@ public class Deposit {
                 leftLift.setPower(0);
             } else if (pivotPos <= 10 && slidesReached) {
                 rightLift.setPower(0);
-                rightLift.setPower(0);
+                leftLift.setPower(0);
             } else {
                 rightLift.setPower(liftPower);
                 leftLift.setPower(liftPower);
@@ -134,15 +134,16 @@ public class Deposit {
                 slidePIDF.reset();
                 pidfActive = true;
             } else {
-                rightLift.setPower(-0.7);
-                leftLift.setPower(-0.7);
+                rightLift.setPower(-1);
+                leftLift.setPower(-1);
             }
         }
 
 
-        if (slideTarget < 500 && pivotTarget == 121 && pivotReached) {
+        if ((slideTarget < 500 && pivotTarget == 121 && pivotReached) || (pivotTarget <= 12 && pivotReached)) {
             pivotPower = 0;
         }
+
         pivot.setPower(pivotPower);
     }
 

@@ -19,31 +19,36 @@ import java.util.List;
 public class Poses {
     // Preload Pathchain
 
-    public static final double farX = 50;
-    public static final double closeX = 24;
-    public static final Pose startPose = new Pose(7.3285, 78.1415, 0);
-    public static final Pose preloadPose = new Pose(40, 78.1415, 0);
+    public static final double farX = 55;
+    public static final double closeX = 30;
+    public static final double wallY = 9;
+    public static final double intakeX = 8;
+    public static final double subX = 42;
+    public static final double subY = 76;
+
+    public static final Pose startPose = new Pose(7.3285, 65.83, 0);
+    public static final Pose preloadPose = new Pose(subX + 1, 65.83, 0);
 
     // Combined Push Pathchain
-    public static final Pose spline1Control = new Pose(24, 32, 0);
-    public static final Pose spline1End = new Pose(farX, 32, 0);
+    public static final Pose spline1Control = new Pose(0, 65.83, 0);
+    public static final Pose spline1End = new Pose(farX - 2, 32, 0);
 
-    public static final Pose spline2Control = new Pose(farX, 22.5, 0);
-    public static final Pose spline2End = new Pose(closeX, 22.5, 0);
+    public static final Pose spline2Control = new Pose(farX, 20, 0);
+    public static final Pose spline2End = new Pose(closeX, 20, 0);
 
-    public static final Pose spline3Control = new Pose(farX, 22.5, 0);
-    public static final Pose spline3End = new Pose(farX, 12.5, 0);
+    public static final Pose spline3Control = new Pose(farX+1, 28, 0);
+    public static final Pose spline3End = new Pose(farX + 1, 15, 0);
 
-    public static final Pose pushSample2End = new Pose(closeX, 12.5, 0);
+    public static final Pose pushSample2End = new Pose(closeX, 15, 0);
 
     public static final Pose spline4Control = new Pose(farX, 16.5, 0);
-    public static final Pose spline4End = new Pose(farX, 7, 0);
+    public static final Pose spline4End = new Pose(farX, wallY, 0);
 
-    public static final Pose pushSample3End = new Pose(closeX, 7, 0);
+    public static final Pose pushSample3End = new Pose(closeX + 5, wallY, 0);
 
-    public static final Pose spline5Control = new Pose(closeX, 36, 0);
-    public static final Pose spline5End = new Pose(7.3285, 36, 0);
+    public static final Pose spline5Control = new Pose(closeX + 5, 36-2, 0);
+    public static final Pose spline5End = new Pose(intakeX, 36-2, 0);
 
-    public static final Pose scoreEnd = new Pose (40, 70, 0);
+    public static final Pose scoreEnd = new Pose (subX, subY, 0);
 
 }
