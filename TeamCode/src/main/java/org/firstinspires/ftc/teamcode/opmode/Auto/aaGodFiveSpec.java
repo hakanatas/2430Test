@@ -21,8 +21,8 @@ import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Timer;
 
-@Autonomous(name = "aaGod Five Spec", group = "auto", preselectTeleOp = "Teleop")
-public class godFiveSpec extends OpMode {
+@Autonomous(name = "God Five Spec", preselectTeleOp = "aaTeleop")
+public class aaGodFiveSpec extends OpMode {
     private Follower follower;
     private Timer pathTimer;
     private EndEffector endEffector;
@@ -198,8 +198,8 @@ public class godFiveSpec extends OpMode {
         } else if (follower.getPose().getX() < 40 && follower.getPose().getY() < 60 && follower.getPose().getY() > 28 && follower.getVelocity().getXComponent() < 0 && specCounter != 1) {
             follower.setMaxPower(0.35);
             power = 0.35;
-        } else if (follower.getPose().getX() < 40 && follower.getPose().getY() < 60 && follower.getPose().getY() > 13 && follower.getVelocity().getXComponent() < 0 && follower.getVelocity().getYComponent() > 0) {
-            follower.setMaxPower(0.4);
+        } else if (follower.getPose().getX() < 40 && follower.getPose().getY() < 60 && follower.getPose().getY() > 10 && follower.getVelocity().getXComponent() < 0 && follower.getVelocity().getYComponent() > 0) {
+            follower.setMaxPower(0.35);
             power = 0.35;
         } else if (specCounter == 1) {
             follower.setMaxPower(1);

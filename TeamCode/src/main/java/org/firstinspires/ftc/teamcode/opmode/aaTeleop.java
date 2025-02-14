@@ -4,10 +4,10 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.seattlesolvers.solverslib.gamepad.TriggerReader;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -22,8 +22,8 @@ import org.firstinspires.ftc.teamcode.config.subsystems.Deposit;
 import org.firstinspires.ftc.teamcode.config.subsystems.EndEffector;
 import org.firstinspires.ftc.robotcontroller.internal.GoBildaPinpointDriver;
 
-@TeleOp(name = "aaTeleop", group = "Teleop")
-public class Teleop extends OpMode {
+@TeleOp(name = "aaTeleop")
+public class aaTeleop extends OpMode {
 
     // Hardware references
     private MecanumDrive drive;
@@ -34,6 +34,7 @@ public class Teleop extends OpMode {
     // Gamepad snapshots
     private GamepadEx player1;
     private GamepadEx player2;
+    private AnalogInput distanceSensor;
 
     TriggerReader rightTriggerReader;
 
@@ -53,12 +54,13 @@ public class Teleop extends OpMode {
     private static final double Y_MIN = -4;
     private static final double Y_MAX =  4;
     private static final double SMOOTH_ZONE = 4.0;
-    private static final boolean demo = true;
+    private static boolean distance = true;
 
     @Override
     public void init() {
         player1 = new GamepadEx(gamepad1);
         player2 = new GamepadEx(gamepad2);
+        distanceSensor = hardwareMap.get(AnalogInput.class, "distance");
         rightTriggerReader  = new TriggerReader(
                 player1, GamepadKeys.Trigger.RIGHT_TRIGGER
         );
@@ -176,8 +178,12 @@ public class Teleop extends OpMode {
 
         // Toggle override with share
         boolean shareJustPressed = player1.wasJustPressed(GamepadKeys.Button.SHARE);
-        if (shareJustPressed) {
+        boolean psJustPressed = player1.wasJustPressed(GamepadKeys.Button.PS);
+        if (psJustPressed) {
             endEffector.override = !endEffector.override;
+        }
+        if (shareJustPressed) {
+            distance = !distance;
         }
 
         // 5) Spec Intake (left bumper + / left trigger -)
@@ -273,7 +279,7 @@ public class Teleop extends OpMode {
 
             case 1:
                 // Lift to ~450
-                slides.setSlideTarget(475);
+                slides.setSlideTarget(610);
                 if (slides.liftPos > 380) {
                     endEffector.openClaw();
                     endEffector.setPreSubPickupPosition();
@@ -325,13 +331,17 @@ public class Teleop extends OpMode {
                 phase = 0;
                 break;
             case 4:
-                endEffector.openClaw();
+                if (specScoring) {
+                    endEffector.openClaw();
+                } else {
+                    intakeState++;
+                }
                 intakeTimer.reset();
                 phase = 0;
                 break;
             case 5:
                 slides.setPivotTarget(95);
-                slides.setSlideTarget(500);
+                slides.setSlideTarget(515);
                 intakeTimer.reset();
                 phase = 0;
                 break;
@@ -343,16 +353,14 @@ public class Teleop extends OpMode {
 
                 if (intakeTimer.milliseconds() > 400) {
                     slides.setSlideTarget(0);
-                    intakeState = (intakeState + 1) % 7;
-                    intakeTimer.reset();
                 }
 
                 phase = 0;
                 break;
             case 7:
                 intakeTimer.reset();
-                if (slides.slidesReached) {
-                    intakeState = (intakeState + 1) % 7;
+                if (slides.liftPos() < 200) {
+                    intakeState = (intakeState + 1) % 8;
                 }
                 phase = 0;
                 break;
@@ -423,7 +431,6 @@ public class Teleop extends OpMode {
         telemetry.addData("Pivot Pos", slides.pivotPos);
         telemetry.addData("Pivot Target", slides.pivotTarget);
         telemetry.addData("specScoring", specScoring);
-        telemetry.addData("either", endEffector.either());
         telemetry.update();
     }
 
@@ -444,6 +451,10 @@ public class Teleop extends OpMode {
      * Applies field-relative drive using the Pinpoint’s IMU heading.
      */
     private Pose2D driveFieldRelative(double forward, double right, double rotate) {
+        if (distance && endEffector.clawPosition > 0.13 && depositState != -1 && distanceSensor.getVoltage() < 0.12) {
+            forward /= 2;
+            right /= 2;
+        }
         pinpoint.update();
         Pose2D pos = pinpoint.getPosition();  // Current position
 

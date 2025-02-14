@@ -72,7 +72,7 @@ public class EndEffector {
      * @param position The desired arm position.
      */
     public void setArmPosition(double position) {
-        position = Range.clip(position, 0, 1);
+        position = Range.clip(position, 0, 0.85);
         armServoLeft.setPosition(position);
         armServoRight.setPosition(position);
         armPosition = position;
@@ -176,22 +176,22 @@ public class EndEffector {
      * Sets the end effector to an idle position.
      */
     public void setIdlePosition() {
-        setPositions(0.5, 0.5, 0.5, clawPosition);
+        setPositions(0.54, 0.5, 0.5, clawPosition);
     }
 
     public void setAutoIdle() {
-        setPositions(0.5, 0.5, 1, clawPosition);
+        setPositions(0.54, 0.5, 1, clawPosition);
     }
 
     /**
      * Sets the end effector to a safe idle position.
      */
     public void setSafeIdle() {
-        setPositions(0.45, 0.5, 0.5, clawPosition);
+        setPositions(0.52, 0.5, 0.5, clawPosition);
     }
 
     public void setBucketSafeIdle() {
-        setPositions(0.65, 0.65, 1, clawPosition);
+        setPositions(0.69, 0.65, 1, clawPosition);
     }
 
     /**
@@ -202,7 +202,7 @@ public class EndEffector {
 //    }
 
     public void setBucketScorePosition() {
-        setPositions(0.53, 0.4, 1, clawPosition);
+        setPositions(0.54, 0.35, 1, clawPosition);
     }
 
     /**
@@ -210,35 +210,35 @@ public class EndEffector {
      */
     public void setPreSubPickupPosition() {
         // was 0.67 & 0.67
-        setPositions(0.65, 0.68, wristPosition, clawPosition);
+        setPositions(0.63, 0.71, wristPosition, clawPosition);
     }
 
     /**
      * Sets the end effector to the sub pickup position.
      */
     public void setSubPickupPosition() {
-        setPositions(0.71, 0.67, wristPosition, clawPosition);
+        setPositions(0.72, 0.67, wristPosition, clawPosition);
     }
 
     /**
      * Sets the end effector to the obstacle deposit position.
      */
     public void setObsDepositPosition() {
-        setPositions(0.25, 0.43, 0, clawPosition);
+        setPositions(0.29, 0.43, 0, clawPosition);
     }
 
     /**
      * Sets the end effector to an alternate wall intake position.
      */
     public void setWallIntakePositionAlt() {
-        setPositions(1, 0.54, 0, 0.85);
+        setPositions(0.85, 0.55, 0, clawPosition);
     }
 
     /**
      * Sets the end effector to a special scoring position.
      */
     public void setSpecScore() {
-        setPositions(0.27, 0.63, 1, 0.13);
+        setPositions(0.37, 0.63, 1, 0.13);
     }
 
     /**

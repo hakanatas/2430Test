@@ -24,7 +24,7 @@ public class Poses {
     public static final double wallY = 9;
     public static final double intakeX = 8;
     public static final double subX = 42;
-    public static final double subY = 76;
+    public static final double subY = 77;
 
     public static final Pose startPose = new Pose(7.3285, 65.83, 0);
     public static final Pose preloadPose = new Pose(subX + 1, 65.83, 0);
@@ -47,7 +47,7 @@ public class Poses {
     public static final Pose pushSample3End = new Pose(closeX + 5, wallY, 0);
 
     public static final Pose spline5Control = new Pose(closeX + 5, 36-2, 0);
-    public static final Pose spline5End = new Pose(intakeX, 36-2, 0);
+    public static final Pose spline5End = new Pose(intakeX, 36-1, 0);
 
     public static final Pose scoreEnd = new Pose (subX, subY, 0);
 
