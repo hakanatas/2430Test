@@ -84,7 +84,7 @@ public class aaGodFiveSpec extends OpMode {
                 }
                 break;
             case 1:
-                score();
+                preScore();
                 break;
             case 2:
                 if (!follower.isBusy()) {
@@ -118,12 +118,29 @@ public class aaGodFiveSpec extends OpMode {
                 }
                 break;
             default:
+                if (follower.getPose().getY() < 65 && follower.getPose().getX() < 50 && specCounter == 5) {
+                    requestOpModeStop();
+                }
                 intakePrep();
         }
     }
 
     public void score() {
         if (follower.getPose().getX() > 10 && follower.getPose().getX() < 20 && follower.isBusy()) {
+            endEffector.setSpecScore();
+            deposit.setSlideTarget(SLIDE_SCORE);
+        }
+
+        if (follower.getVelocityMagnitude() < SCORE_VEL_THRESHOLD && follower.getPose().getX() > 35) {
+            endEffector.openClaw();
+            deposit.setSlideTarget(SLIDE_SAFE);
+            specCounter++;
+            follower.breakFollowing();
+            setPathState();
+        }
+    }
+    public void preScore() {
+        if (follower.getPose().getX() > 5 && follower.getPose().getX() < 20 && follower.isBusy()) {
             endEffector.setSpecScore();
             deposit.setSlideTarget(SLIDE_SCORE);
         }
@@ -198,7 +215,7 @@ public class aaGodFiveSpec extends OpMode {
         } else if (follower.getPose().getX() < 40 && follower.getPose().getY() < 60 && follower.getPose().getY() > 28 && follower.getVelocity().getXComponent() < 0 && specCounter != 1) {
             follower.setMaxPower(0.35);
             power = 0.35;
-        } else if (follower.getPose().getX() < 40 && follower.getPose().getY() < 60 && follower.getPose().getY() > 10 && follower.getVelocity().getXComponent() < 0 && follower.getVelocity().getYComponent() > 0) {
+        } else if (follower.getPose().getX() < 24 && follower.getPose().getY() < 48 && follower.getPose().getY() > 24 && follower.getPose().getY() > 10 && follower.getVelocity().getXComponent() < 0) {
             follower.setMaxPower(0.35);
             power = 0.35;
         } else if (specCounter == 1) {

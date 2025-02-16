@@ -104,7 +104,7 @@ public class aaTeleop extends OpMode {
 
 
         // Handle Spec / Samp Deposit
-        if (player1.getButton(GamepadKeys.Button.TOUCHPAD_FINGER_1) && player1.getButton(GamepadKeys.Button.TOUCHPAD_FINGER_2)) {
+        if (player1.wasJustPressed(GamepadKeys.Button.TOUCHPAD_FINGER_1) && player1.wasJustPressed(GamepadKeys.Button.TOUCHPAD_FINGER_2)) {
             specScoring = !specScoring;
         }
 

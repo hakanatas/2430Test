@@ -180,7 +180,7 @@ public class EndEffector {
     }
 
     public void setAutoIdle() {
-        setPositions(0.54, 0.5, 1, clawPosition);
+        setPositions(0.5, 0.5, 1, clawPosition);
     }
 
     /**
