@@ -1,20 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmode.Auto;
 
-
-import com.pedropathing.follower.Follower;
-import com.pedropathing.pathgen.Point;
 import com.pedropathing.localization.Pose;
-import com.pedropathing.util.Constants;
-import com.pedropathing.util.Timer;
-import com.qualcomm.hardware.lynx.LynxModule;
-
-import org.firstinspires.ftc.teamcode.config.subsystems.Deposit;
-import org.firstinspires.ftc.teamcode.config.subsystems.EndEffector;
-import org.firstinspires.ftc.teamcode.pedroPathing.constants.FConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.constants.LConstants;
-
-import java.util.List;
-
 
 public class Poses {
     // Preload Pathchain

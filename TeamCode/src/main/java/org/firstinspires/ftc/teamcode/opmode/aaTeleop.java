@@ -48,12 +48,7 @@ public class aaTeleop extends OpMode {
     private ElapsedTime intakeTimer = new ElapsedTime();
     private ElapsedTime depositTimer = new ElapsedTime();
 
-    // Demo field-bound example (not actively used, can remove if unneeded)
-    private static final double X_MIN = -4;
-    private static final double X_MAX =  4;
-    private static final double Y_MIN = -4;
-    private static final double Y_MAX =  4;
-    private static final double SMOOTH_ZONE = 4.0;
+    private final static double PIVOT_DOWN = 12;
     private static boolean distance = true;
 
     @Override
@@ -269,7 +264,7 @@ public class aaTeleop extends OpMode {
         switch (intakeState) {
             case 0:
                 // pivot=10, slide=0, idle pos, open claw
-                slides.setPivotTarget(12);
+                slides.setPivotTarget(PIVOT_DOWN);
                 slides.setSlideTarget(0);
                 endEffector.setIdlePosition();
                 endEffector.openClaw();
@@ -309,13 +304,20 @@ public class aaTeleop extends OpMode {
                         break;
                     case 1: // deposit
                         endEffector.setSafeIdle();
-                        slides.setPivotTarget(12);
-                        slides.setSlideTarget(0);
-                        if (intakeTimer.milliseconds() >= 200) {
-                            if (!endEffector.either()) {
-                                intakeState = 1;
-                            }
+                        if (!endEffector.either()) {
+                            intakeState = 1;
+                        } else {
+                            slides.setPivotTarget(PIVOT_DOWN);
+                            slides.setSlideTarget(0);
                         }
+//
+//                        slides.setPivotTarget(12);
+//                        slides.setSlideTarget(0);
+//                        if (intakeTimer.milliseconds() >= 200) {
+//                            if (!endEffector.either()) {
+//                                intakeState = 1;
+//                            }
+//                        }
                         break;
                 }
                 break;
