@@ -7,10 +7,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 
 public class MecanumDrive {
-    private DcMotorEx frontLeftMotor;
-    private DcMotorEx frontRightMotor;
-    private DcMotorEx backLeftMotor;
-    private DcMotorEx backRightMotor;
+    public DcMotorEx frontLeftMotor;
+    public DcMotorEx frontRightMotor;
+    public DcMotorEx backLeftMotor;
+    public DcMotorEx backRightMotor;
     private DcMotorEx[] motors;
 
     public void init(HardwareMap hardwareMap) {

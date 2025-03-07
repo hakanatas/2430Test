@@ -343,7 +343,8 @@ public class aaTeleop extends OpMode {
                 break;
             case 5:
                 slides.setPivotTarget(95);
-                slides.setSlideTarget(515);
+                //slides.setSlideTarget(515);
+                slides.setSlideTarget(800);
                 intakeTimer.reset();
                 phase = 0;
                 break;
