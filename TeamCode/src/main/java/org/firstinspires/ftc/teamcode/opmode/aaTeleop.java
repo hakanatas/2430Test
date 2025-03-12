@@ -48,7 +48,7 @@ public class aaTeleop extends OpMode {
     private ElapsedTime intakeTimer = new ElapsedTime();
     private ElapsedTime depositTimer = new ElapsedTime();
 
-    private final static double PIVOT_DOWN = 12;
+    private final static double PIVOT_DOWN = 8;
     private static boolean distance = true;
 
     @Override
@@ -344,13 +344,13 @@ public class aaTeleop extends OpMode {
             case 5:
                 slides.setPivotTarget(95);
                 //slides.setSlideTarget(515);
-                slides.setSlideTarget(800);
+                slides.setSlideTarget(1205);
                 intakeTimer.reset();
                 phase = 0;
                 break;
             case 6:
                 endEffector.openClaw();
-                if (intakeTimer.milliseconds() > 300) {
+                if (intakeTimer.milliseconds() > 400) {
                     endEffector.setBucketSafeIdle();
                 }
 
@@ -402,7 +402,7 @@ public class aaTeleop extends OpMode {
                 break;
 
             case 3:
-                slides.setSlideTarget(450);
+                slides.setSlideTarget(500);
                 depositTimer.reset();
                 break;
             case 4:
@@ -428,6 +428,7 @@ public class aaTeleop extends OpMode {
         );
         telemetry.addData("Position", data);
         telemetry.addData("Status", pinpoint.getDeviceStatus());
+        telemetry.addData("Ende Effector Pivot Pos", endEffector.getPivotPosition());
         telemetry.addData("Pinpoint Frequency", pinpoint.getFrequency());
         telemetry.addData("Lift Pos", slides.liftPos);
         telemetry.addData("Lift Target", slides.slidePIDF.getSetPoint());

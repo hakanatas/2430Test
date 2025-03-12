@@ -12,10 +12,15 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.config.subsystems.Deposit;
 import org.firstinspires.ftc.teamcode.config.subsystems.EndEffector;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.FConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.LConstants;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.List;
 
@@ -28,6 +33,8 @@ public class sketchSixSpec extends OpMode {
     private int pathState;
     private int specCounter = 0;
 
+    private limelight pipeline;
+    private OpenCvWebcam camera;
     private double power;
 
     private static final double SCORE_VEL_THRESHOLD = 0.8;
@@ -251,6 +258,27 @@ public class sketchSixSpec extends OpMode {
         }
 
         pathTimer = new Timer();
+
+        String webcamName = "Webcam 1"; // Change this to match your config
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, webcamName));
+        pipeline = new limelight("yellow"); // Set color dynamically
+        camera.setPipeline(pipeline);
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"));
+
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+            @Override
+            public void onOpened() {
+                camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+                telemetry.addLine("Camera Ready");
+                telemetry.update();
+            }
+
+            @Override
+            public void onError(int errorCode) {
+                telemetry.addData("Camera Error", errorCode);
+                telemetry.update();
+            }
+        });
 
         // Initialize follower, slides, etc. as usual
         Constants.setConstants(FConstants.class, LConstants.class);

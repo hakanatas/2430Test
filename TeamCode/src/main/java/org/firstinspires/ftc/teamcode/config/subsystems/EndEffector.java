@@ -202,7 +202,7 @@ public class EndEffector {
 //    }
 
     public void setBucketScorePosition() {
-        setPositions(0.54, 0.35, 1, clawPosition);
+        setPositions(0.54, 0.45, 1, clawPosition);
     }
 
     /**
@@ -210,14 +210,14 @@ public class EndEffector {
      */
     public void setPreSubPickupPosition() {
         // was 0.67 & 0.67
-        setPositions(0.63, 0.71, wristPosition, clawPosition);
+        setPositions(0.58, 0.75, wristPosition, clawPosition);
     }
 
     /**
      * Sets the end effector to the sub pickup position.
      */
     public void setSubPickupPosition() {
-        setPositions(0.72, 0.67, wristPosition, clawPosition);
+        setPositions(0.63, 0.67, wristPosition, clawPosition);
     }
 
     /**
